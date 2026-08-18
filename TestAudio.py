@@ -30,9 +30,12 @@ def mp3ToWav(mp3File):
 
 
 def wavToMidi(wavFile):
-    print("wsh")
     outputDir = os.path.dirname(wavFile)
-    predict_and_save(
+    midiFile = os.path.join(outputDir, os.path.splitext(os.path.basename(wavFile))[0] + "_basic_pitch.mid")
+    if os.path.exists(midiFile):
+        os.remove(midiFile)
+
+    predict_and_save(#code pris directment du repo git de la lib
         audio_path_list=[wavFile],
         output_directory=outputDir,
         save_midi=True,
@@ -41,18 +44,12 @@ def wavToMidi(wavFile):
         save_notes=False,
         model_or_model_path=ICASSP_2022_MODEL_PATH,
     )
-    midiFile = os.path.join(outputDir, os.path.splitext(os.path.basename(wavFile))[0] + "_basic_pitch.mid")
-    return midiFile
-
-def mp3ToMidi(fileName):
-    wavFile = mp3ToWav(fileName)
-    midiFile = wavToMidi(wavFile)
+    
     return midiFile
 
 def mp3ToMidi(fileName) :
     wavFile = mp3ToWav(fileName)
     midFile = wavToMidi(wavFile)
-    print("FINITO")
     return midFile
 
 midiFile = mp3ToMidi(r"C:\Users\adrie\Documents\SummerSchool1\SumSchool1\Song\Ecossaise_Piano.mp3")
