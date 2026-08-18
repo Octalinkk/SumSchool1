@@ -1,4 +1,5 @@
 from SoundExtract import *
 
 print ("Project start mdr")
-SoundExtract.getNotesForIntru(0)
+extract = SoundExtract("path")
+extract.getNotesForIntru(0)
