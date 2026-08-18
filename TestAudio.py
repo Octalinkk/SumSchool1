@@ -52,8 +52,8 @@ def mp3ToMidi(fileName):
 def mp3ToMidi(fileName) :
     wavFile = mp3ToWav(fileName)
     midFile = wavToMidi(wavFile)
+    print("FINITO")
     return midFile
-    pass
 
-midiPath = wavToMidi(r"C:\Users\adrie\Documents\SummerSchool1\SumSchool1\Song\Ecossaise_Piano.wav")
+midiFile = mp3ToMidi(r"C:\Users\adrie\Documents\SummerSchool1\SumSchool1\Song\Ecossaise_Piano.mp3")
 
