@@ -3,6 +3,7 @@ import random
 import time
 from Spaceship import SpaceShip
 from pygame import Vector2
+import math
 
 class Game:
 
@@ -85,7 +86,7 @@ class Game:
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         
-        spaceShip = SpaceShip(Vector2(0, 0), Vector2(0, 0), 0)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2 - 300, self.screenHeight/2), 100, math.pi/2)
 
         
         while self.running:
@@ -98,6 +99,7 @@ class Game:
                     self.running = False
             
             pygame.display.flip()  
+            spaceShip.drawShip(self.screen)
         
         pygame.quit()
 
