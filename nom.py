@@ -4,7 +4,7 @@ import time
 
 class Game:
 
-    nStars = 10
+    nStars = 1000
     screenWidth = 1280
     screenHeight = 768
     tabStarsWidth = []
@@ -41,22 +41,40 @@ class Game:
             self.tabStarsWidth[i]= (self.tabStarsWidth[i] + 0.1)%1280
 
             pygame.draw.polygon(self.screen, (self.tabStarsColors[i], self.tabStarsColors[i], self.tabStarsColors[i]), [(self.tabStarsWidth[i]+1, self.tabStarsHeight[i]+0), (self.tabStarsWidth[i]+2, self.tabStarsHeight[i]+2), (self.tabStarsWidth[i]+0, self.tabStarsHeight[i]+2)])
-        
+
+    def supernova(self,x,y):
+        randomR = int(random.uniform(0,255))
+        randomG = int(random.uniform(0,255))
+        randomB = int(random.uniform(0,255))
+        pygame.draw.polygon(self.screen, (255, 255, 255), [(x, y), (x+0.5, y+1), (x+1, y)])
+        r = int(random.uniform(0,100))
+        n = 1
+        while r > n:
+            
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x+r/n, y+r/n), (x+r/n+0.5, y+r/n+1), (x+r/n+1, y+r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x-r/n, y-r/n), (x-r/n+0.5, y-r/n+1), (x-r/n+1, y-r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x+r/n, y-r/n), (x+r/n+0.5, y-r/n+1), (x+r/n+1, y-r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x-r/n, y+r/n), (x-r/n+0.5, y+r/n+1), (x-r/n+1, y+r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x, y+r/n), (x+0.5, y+r/n+1), (x+1, y+r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x, y-r/n), (x+0.5, y-r/n+1), (x+1, y-r/n)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x+r/n, y), (x+r/n+0.5, y+1), (x+r/n+1, y)])
+            pygame.draw.polygon(self.screen, (randomR, randomG, randomB), [(x-r/n, y), (x-r/n+0.5, y+1), (x-r/n+1, y)])
+
+            n += 2
 
     def deleteARandomStar(self,nStars):
         if (nStars > 0) :
             randomStars = int(random.uniform(0,nStars))
-            pygame.draw.polygon(self.screen, (0, 0, 0), [(self.tabStarsWidth[randomStars]+1, self.tabStarsHeight[randomStars]+0), (self.tabStarsWidth[randomStars]+2, self.tabStarsHeight[randomStars]+2), (self.tabStarsWidth[randomStars]+0, self.tabStarsHeight[randomStars]+2)])
+            x = self.tabStarsWidth[randomStars]
+            y = self.tabStarsHeight[randomStars]
+            pygame.draw.polygon(self.screen, (0, 0, 0), [(x+1, y), (x+2, y+2), (x, y+2)])
             del self.tabStarsWidth[randomStars]
             del self.tabStarsHeight[randomStars]
-            # Fonction qui fait explosion
+            self.supernova(x,y)
             nStars -= 1
 
-    def supernova(x,y):
-        randomSize = int(random.uniform(10,50))
-        time = 0
-        while (time <= 200):
-            pass
+
+
 
     def onInit(self):
         
@@ -70,7 +88,7 @@ class Game:
         
         while self.running:
             currentTime = time.time()
-            if ((int(currentTime - self.startTime)) == 5):
+            if ((int(currentTime - self.startTime)) >= 5):
                 self.deleteARandomStar(len(self.tabStarsHeight))
             self.moveAllStars(len(self.tabStarsHeight))
             for event in pygame.event.get():
