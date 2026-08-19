@@ -86,7 +86,7 @@ class Game:
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 - 300, self.screenHeight/2), 100, math.pi/2)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2, self.screenHeight/2), 100, 0)
 
         
         while self.running:
