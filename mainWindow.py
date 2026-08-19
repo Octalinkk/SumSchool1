@@ -1,20 +1,22 @@
 import pygame
 import random 
 import time
+from SoundExtract import *
 
 class Game:
 
-    nStars = 10
+    nStars = 1000
     screenWidth = 1280
     screenHeight = 768
-    tabStarsWidth = []
-    tabStarsHeight = []  # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
-    tabStarsColors = []  # LISTS TO STORE THE COLORS OF THE STARS
-    startTime = time.time()
+    tabStarsWidth = []      # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
+    tabStarsHeight = []     # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
+    tabStarsColors = []     # LISTS TO STORE THE COLORS OF THE STARS
 
     def __init__(self):
         self.screen = None
         self.running = True
+        self.extract = SoundExtract("test2.mid")
+        self.Instr1Notes = self.extract.getNotesForIntru(0)
 
     def test_pygame_initialization(self):
         pygame.init()
@@ -46,7 +48,7 @@ class Game:
     def deleteARandomStar(self,nStars):
         if (nStars > 0) :
             randomStars = int(random.uniform(0,nStars))
-            pygame.draw.polygon(self.screen, (0, 0, 0), [(self.tabStarsWidth[randomStars]+1, self.tabStarsHeight[randomStars]+0), (self.tabStarsWidth[randomStars]+2, self.tabStarsHeight[randomStars]+2), (self.tabStarsWidth[randomStars]+0, self.tabStarsHeight[randomStars]+2)])
+            pygame.draw.polygon(self.screen, (100, 0, 100), [(self.tabStarsWidth[randomStars]+1, self.tabStarsHeight[randomStars]+0), (self.tabStarsWidth[randomStars]+2, self.tabStarsHeight[randomStars]+2), (self.tabStarsWidth[randomStars]+0, self.tabStarsHeight[randomStars]+2)])
             del self.tabStarsWidth[randomStars]
             del self.tabStarsHeight[randomStars]
             # Fonction qui fait explosion
@@ -59,25 +61,36 @@ class Game:
             pass
 
     def onInit(self):
-        
-        
-
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
+        pygame.mixer.music.load("test2.mid")
         
-
-
+        pygame.mixer.music.play()
+        
+        # Index to check next note
+        nextNoteIdx = 0
         
         while self.running:
-            currentTime = time.time()
-            if ((int(currentTime - self.startTime)) == 5):
-                self.deleteARandomStar(len(self.tabStarsHeight))
+            songPos = pygame.mixer.music.get_pos()            
+            # Check if song started
+            if songPos != -1:
+                currentTime = songPos / 1000.0  # Convert to sec
+                
+                # Check timing with next note
+                if nextNoteIdx < len(self.Instr1Notes):
+                    noteTimestmp = self.Instr1Notes[nextNoteIdx].start
+                    
+                    if currentTime >= noteTimestmp:
+                        self.screen.fill(color=(100, 100, 100)) # A changer l'animation
+                        nextNoteIdx += 1 
+
             self.moveAllStars(len(self.tabStarsHeight))
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
             
-            pygame.display.flip()  
+            pygame.display.flip() 
         
         pygame.quit()
 
