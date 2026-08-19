@@ -5,3 +5,6 @@ class SpaceShip():
         self.originPos = origin
         self.targetPos = target
         self.dist = distance
+
+    def drawShip(angRad:float):
+        ...

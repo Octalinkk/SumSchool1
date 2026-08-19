@@ -1,6 +1,8 @@
 import pygame
 import random 
 import time
+from Spaceship import SpaceShip
+from pygame import Vector2
 
 class Game:
 
@@ -83,7 +85,7 @@ class Game:
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         
-
+        spaceShip = SpaceShip(Vector2(0, 0), Vector2(0, 0), 0)
 
         
         while self.running:
