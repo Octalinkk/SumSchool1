@@ -99,7 +99,7 @@ class Game:
                     noteTimestmp = self.Instr1Notes[nextNoteIdx].start
                     
                     if currentTime >= noteTimestmp:
-                        self.screen.fill(color=(100, 100, 100)) # A changer l'animation
+                        self.deleteARandomStar(len(self.tabStarsHeight))
                         nextNoteIdx += 1 
 
             self.moveAllStars(len(self.tabStarsHeight))
