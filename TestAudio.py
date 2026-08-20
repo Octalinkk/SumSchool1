@@ -12,7 +12,7 @@ from pygame import mixer as mixer
 from librosa import display
 
 def playAudio(filePath: str) -> None :
-    pygame.mixer.init(frequency=44000)      #44kHz frequence du wav il me semble
+    pygame.mixer.init(frequency=44100)      #44.1kHz frequence du wav il me semble
     pygame.mixer.music.load(filePath)
     pygame.mixer.music.play()
     while pygame.mixer.music.get_busy() == True:
@@ -47,7 +47,6 @@ def detectOnSets(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tu
 
 
 def plotOnsetAnalysis(waveForm: numpy.ndarray, sampleRate: int, onset_env: numpy.ndarray, onset_peaks: numpy.ndarray, onset_detect: numpy.ndarray, hopLength: int, outputImagePath: str) -> None:
-    """Trace et sauvegarde le graphique onset envelope + waveform."""
     times = librosa.times_like(onset_env, sr=sampleRate, hop_length=hopLength)
 
     fig, ax = plt.subplots(nrows=2, sharex=True, height_ratios=(3, 1))
@@ -72,7 +71,7 @@ def wavToMidi(wavFile: str) -> None:
     waveForm, sampleRate = loadAudio(wavFile)
     onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
     plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"/home/adrien/Documents/SumSchool1/Image/test.png")
-    
+
 
 def mp3ToMidi(fileName: str) -> None :
     wavFile: str = mp3ToWav(fileName)
