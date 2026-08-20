@@ -1,13 +1,10 @@
 import wave as wave
-import pydub as pydub
 import os 
 import librosa
 import pygame
 import numpy as numpy
 import matplotlib.pyplot as plt
 
-from pydub import AudioSegment
-from pydub import playback as playback
 from pygame import mixer as mixer
 from librosa import display
 
@@ -22,16 +19,30 @@ def readFile(filePath: str) -> wave.Wave_read :
     w: wave.Wave_read = wave.open(filePath, 'rb')  #rb veux dire read binary comme ça tu oublieras pas demain IDIOT!
     return w
 
-def mp3ToWav(mp3File: str) -> str:
-    song: AudioSegment = AudioSegment.from_mp3(mp3File)
-    wavFile: str = os.path.splitext(mp3File)[0] + ".wav"
-    song.export(wavFile, format="wav")
-    return wavFile 
+def mp3ToMidi(fileName: str) -> None :
+    midFile: None = wavToMidi(fileName)
+    return midFile
+
+def wavToMidi(wavFile: str) -> None:
+    hopLength: int = 512
+    waveForm, sampleRate = librosa.load(wavFile, sr=None)
+    print(sampleRate)
+    onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
+    f0, pitchTimes = detectPitchesCqt(waveForm, sampleRate, hopLength)
+
+    onset_times: numpy.ndarray = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
+    notePitches: numpy.ndarray = aggregatePitchesByNote(f0, pitchTimes, onset_detect, sampleRate, hopLength)
+
+    print(f"Notes start : {onset_times}") #print de debug a delete après
+    print(f"Notes pitches : {notePitches}")#print de debug a delete après
+    print(f"Number of notes : {notePitches.size}")#print de debug a delete après
+    #plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"./Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
+
 
 def loadAudio(wavFile: str) -> tuple[numpy.ndarray, int]:
     waveForm, sampleRate = librosa.load(wavFile)
-    print("Number of samples : ", waveForm.shape)
-    print("Duration : ", librosa.get_duration(y=waveForm, sr=sampleRate))
+    print("Number of samples : ", waveForm.shape)#print de debug a delete après
+    print("Duration : ", librosa.get_duration(y=waveForm, sr=sampleRate))#print de debug a delete après
     return waveForm, sampleRate
 
 def detectOnSets(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
@@ -42,10 +53,9 @@ def detectOnSets(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tu
     onset_peaks = librosa.util.localmax(onset_env)
     onset_detect = librosa.onset.onset_detect(
         onset_envelope=onset_env, sr=sampleRate, hop_length=hopLength
-    )
+    )       
     return onset_env, onset_peaks, onset_detect
-
-
+''' 
 def plotOnsetAnalysis(waveForm: numpy.ndarray, sampleRate: int, onset_env: numpy.ndarray, onset_peaks: numpy.ndarray, onset_detect: numpy.ndarray, hopLength: int, outputImagePath: str) -> None:
     times = librosa.times_like(onset_env, sr=sampleRate, hop_length=hopLength)
 
@@ -61,21 +71,58 @@ def plotOnsetAnalysis(waveForm: numpy.ndarray, sampleRate: int, onset_env: numpy
     ax[0].label_outer()
 
     plt.savefig(outputImagePath)
-    plt.close(fig)
+    plt.close(fig)'''
 
+def detectPitchesCqt(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tuple[numpy.ndarray, numpy.ndarray]:
+    binsPerOctave: int = 36
+    numHarmonics: int = 5
+    numOctaves: int = 7
+    fmin: float = librosa.note_to_hz('C2')
 
+    cqtMatrix: numpy.ndarray = librosa.cqt(waveForm, sr=sampleRate, hop_length=hopLength, fmin=fmin, bins_per_octave=binsPerOctave, n_bins=binsPerOctave * numOctaves)
+    cqtMagnitue: numpy.ndarray = numpy.abs(cqtMatrix)
+    nBins, nFrames = cqtMagnitue.shape
 
-def wavToMidi(wavFile: str) -> None:
-    hopLength: int = 512
+    offsets: numpy.ndarray = binsPerOctave * numpy.log2(numpy.arange(1, numHarmonics + 1))
+    weights: numpy.ndarray = 1.0 / numpy.arange(1, numHarmonics + 1)
 
-    waveForm, sampleRate = loadAudio(wavFile)
-    onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
-    plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"/home/adrien/Documents/SumSchool1/Image/test.png")
+    cands: numpy.ndarray = numpy.arange(0, nBins - int(numpy.ceil(offsets[-1])), 3)
 
+    def salience(C: numpy.ndarray) -> numpy.ndarray:
+        scores: list = []
+        for b in cands:
+            total: float = 0
+            for k in range(1, numHarmonics + 1):
+                p = b + binsPerOctave * numpy.log2(k)
+                total += (1 / k) * C[int(round(p))]
+            scores.append(total / weights.sum())
+        return numpy.array(scores)
 
-def mp3ToMidi(fileName: str) -> None :
-    wavFile: str = mp3ToWav(fileName)
-    midFile: None = wavToMidi(wavFile)
-    return midFile
+    maxBinIndices: numpy.ndarray = numpy.array([
+        cands[numpy.argmax(salience(cqtMagnitue[:, t]))] for t in range(nFrames)
+    ])
 
-mp3ToMidi(r"/home/adrien/Documents/SumSchool1/Song/TestPiano.mp3")
+    binFreq: numpy.ndarray = librosa.cqt_frequencies(n_bins=nBins, fmin=fmin, bins_per_octave=binsPerOctave)
+    f0: numpy.ndarray = binFreq[maxBinIndices]
+    pitchTimes: numpy.ndarray = librosa.times_like(f0, sr=sampleRate, hop_length=hopLength)
+
+    return f0, pitchTimes
+
+def aggregatePitchesByNote(f0: numpy.ndarray, pitchTimes: numpy.ndarray, onset_detect: numpy.ndarray, sampleRate: int, hopLength: int) -> numpy.ndarray:
+    onset_times: numpy.ndarray = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
+
+    notePitches: list = []
+
+    for i in range(len(onset_times)):
+        debut = onset_times[i]
+        fin = onset_times[i + 1] if i + 1 < len(onset_times) else pitchTimes[-1]
+
+        masque = (pitchTimes >= debut) & (pitchTimes < fin)
+        frequencesDeLaNote = f0[masque]
+
+        pitchDeLaNote = numpy.median(frequencesDeLaNote)
+        notePitches.append(pitchDeLaNote)
+
+    return numpy.array(notePitches)
+
+mp3ToMidi(r"./Song/PinkPanther_Piano_Only.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
