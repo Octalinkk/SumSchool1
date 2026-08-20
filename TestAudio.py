@@ -29,7 +29,7 @@ def wavToMidi(wavFile: str) -> None:
     print(sampleRate)
     onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
     f0, pitchTimes = detectPitchesCqt(waveForm, sampleRate, hopLength)
-    plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"/home/adrien/Documents/SumSchool1/Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
+    plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"./Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
 
 
 def loadAudio(wavFile: str) -> tuple[numpy.ndarray, int]:
@@ -106,4 +106,4 @@ def detectPitchesCqt(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -
     print(f"pitch size : {pitchTimes.size}") #si meme taille victoire hihih  yipeeeee
     return f0, pitchTimes
 
-mp3ToMidi(r"/home/adrien/Documents/SumSchool1/Song/PinkPanther_Piano_Only.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
+mp3ToMidi(r"./Song/TestPiano.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
