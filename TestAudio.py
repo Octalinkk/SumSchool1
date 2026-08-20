@@ -29,13 +29,20 @@ def wavToMidi(wavFile: str) -> None:
     print(sampleRate)
     onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
     f0, pitchTimes = detectPitchesCqt(waveForm, sampleRate, hopLength)
-    plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"./Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
+
+    onset_times: numpy.ndarray = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
+    notePitches: numpy.ndarray = aggregatePitchesByNote(f0, pitchTimes, onset_detect, sampleRate, hopLength)
+
+    print(f"Notes start : {onset_times}") #print de debug a delete après
+    print(f"Notes pitches : {notePitches}")#print de debug a delete après
+    print(f"Number of notes : {notePitches.size}")#print de debug a delete après
+    #plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"./Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
 
 
 def loadAudio(wavFile: str) -> tuple[numpy.ndarray, int]:
     waveForm, sampleRate = librosa.load(wavFile)
-    print("Number of samples : ", waveForm.shape)
-    print("Duration : ", librosa.get_duration(y=waveForm, sr=sampleRate))
+    print("Number of samples : ", waveForm.shape)#print de debug a delete après
+    print("Duration : ", librosa.get_duration(y=waveForm, sr=sampleRate))#print de debug a delete après
     return waveForm, sampleRate
 
 def detectOnSets(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
@@ -48,7 +55,7 @@ def detectOnSets(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tu
         onset_envelope=onset_env, sr=sampleRate, hop_length=hopLength
     )       
     return onset_env, onset_peaks, onset_detect
-
+''' 
 def plotOnsetAnalysis(waveForm: numpy.ndarray, sampleRate: int, onset_env: numpy.ndarray, onset_peaks: numpy.ndarray, onset_detect: numpy.ndarray, hopLength: int, outputImagePath: str) -> None:
     times = librosa.times_like(onset_env, sr=sampleRate, hop_length=hopLength)
 
@@ -64,7 +71,7 @@ def plotOnsetAnalysis(waveForm: numpy.ndarray, sampleRate: int, onset_env: numpy
     ax[0].label_outer()
 
     plt.savefig(outputImagePath)
-    plt.close(fig)
+    plt.close(fig)'''
 
 def detectPitchesCqt(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -> tuple[numpy.ndarray, numpy.ndarray]:
     binsPerOctave: int = 36
@@ -99,11 +106,23 @@ def detectPitchesCqt(waveForm: numpy.ndarray, sampleRate: int, hopLength: int) -
     f0: numpy.ndarray = binFreq[maxBinIndices]
     pitchTimes: numpy.ndarray = librosa.times_like(f0, sr=sampleRate, hop_length=hopLength)
 
-    print(f"f0 : {f0}")
-    print('\n')
-    print(f"pitch time : {pitchTimes}")
-    print(f"f0 size : {f0.size}")
-    print(f"pitch size : {pitchTimes.size}") #si meme taille victoire hihih  yipeeeee
     return f0, pitchTimes
 
-mp3ToMidi(r"./Song/TestPiano.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
+def aggregatePitchesByNote(f0: numpy.ndarray, pitchTimes: numpy.ndarray, onset_detect: numpy.ndarray, sampleRate: int, hopLength: int) -> numpy.ndarray:
+    onset_times: numpy.ndarray = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
+
+    notePitches: list = []
+
+    for i in range(len(onset_times)):
+        debut = onset_times[i]
+        fin = onset_times[i + 1] if i + 1 < len(onset_times) else pitchTimes[-1]
+
+        masque = (pitchTimes >= debut) & (pitchTimes < fin)
+        frequencesDeLaNote = f0[masque]
+
+        pitchDeLaNote = numpy.median(frequencesDeLaNote)
+        notePitches.append(pitchDeLaNote)
+
+    return numpy.array(notePitches)
+
+mp3ToMidi(r"./Song/PinkPanther_Piano_Only.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
