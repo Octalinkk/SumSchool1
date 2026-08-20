@@ -1,115 +1,187 @@
 import pygame
-import random 
+import random
 import time
 from Spaceship import SpaceShip
 from pygame import Vector2
+from typing import List, Dict, Any, Optional
 import math
 
+
 class Game:
+    # CLASS CONSTANTS FOR GAME CONFIGURATION
+    nStars: int = 1000
+    screenWidth: int = 1920
+    screenHeight: int = 1080
+    supnovaDuration: int = 10
+    
+    # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
+    tabStarsWidth: List[float] = []
+    tabStarsHeight: List[float] = []  # LISTS OF COORDINATES TO DELETE AND MODIFY EACH STAR
+    tabStarsColors: List[int] = []  # LISTS TO STORE THE COLOR INTENSITY OF EACH STAR
+    startTime: float = time.time()
+    supnovaActiveList: List[Dict[str, Any]] = []
 
-    nStars = 1000
-    screenWidth = 1280
-    screenHeight = 768
-    tabStarsWidth = []
-    tabStarsHeight = []  # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
-    tabStarsColors = []  # LISTS TO STORE THE COLORS OF THE STARS
-    startTime = time.time()
-    supnovaActiveList = []
-    supnovaDuration = 5
-    startTime = time.time()
+    def __init__(self) -> None:
+        # INITIALIZE PYGAME SCREEN AND RUNNING STATE
+        self.screen: Optional[pygame.Surface] = None
+        self.running: bool = True
 
-    def __init__(self):
-        self.screen = None
-        self.running = True
-
-    def test_pygame_initialization(self):
+    def test_pygame_initialization(self) -> None:
+        # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         pygame.display.set_caption("APP")
 
-    def drawStars(self, nStars):
-
-        for i in range(nStars): 
-
-            randomWidth = int(random.uniform(0,self.screenWidth))
-            randomHeight = int(random.uniform(0,self.screenHeight)) # GENRATE A RANDOM WIDTH AND HEIGHT IN ORDER TO GIVE A RANDOM POSITION FOR EVERY STARS 
-            randomOpacity = int(random.uniform(0,255))  # FIND A RANDOM OPACITY FOR THE STARS
-            pygame.draw.polygon(self.screen, (255-randomOpacity, 255-randomOpacity, 255-randomOpacity), [(randomWidth+1, randomHeight+0), (randomWidth+2, randomHeight+2), (randomWidth+0, randomHeight+2)])
-            self.tabStarsWidth.append(randomWidth)
-            self.tabStarsHeight.append(randomHeight) # UPDATE THE TABS OF COORDS TO USE IT, IN ORDER TO DELETE THE STARS
-            self.tabStarsColors.append(255-randomOpacity)
-
-    def moveAllStars(self,nStars):
+    def drawStars(self, nStars: int) -> None:
+        # GENERATE RANDOM STARS AND STORE THEIR PROPERTIES IN CLASS LISTS
         for i in range(nStars):
+            # GENERATE RANDOM POSITION AND OPACITY FOR EACH STAR
+            randomWidth: int = int(random.uniform(0, self.screenWidth))
+            randomHeight: int = int(random.uniform(0, self.screenHeight))
+            randomOpacity: int = int(random.uniform(0, 255))
             
-            pygame.draw.polygon(self.screen, (0, 0, 0), [(self.tabStarsWidth[i]+1, self.tabStarsHeight[i]+0), (self.tabStarsWidth[i]+2, self.tabStarsHeight[i]+2), (self.tabStarsWidth[i]+0, self.tabStarsHeight[i]+2)])  
-            self.tabStarsHeight[i] = (self.tabStarsHeight[i] + 0.01)%768
-            self.tabStarsWidth[i]= (self.tabStarsWidth[i] + 0.1)%1280
-
-            pygame.draw.polygon(self.screen, (self.tabStarsColors[i], self.tabStarsColors[i], self.tabStarsColors[i]), [(self.tabStarsWidth[i]+1, self.tabStarsHeight[i]+0), (self.tabStarsWidth[i]+2, self.tabStarsHeight[i]+2), (self.tabStarsWidth[i]+0, self.tabStarsHeight[i]+2)])
-
-    def drawSupnovaAtStage(self, x, y, elapsedTime, randomR, randomG, randomB):
-
-        progress = elapsedTime / self.supnovaDuration
-        x_formula = progress * 5
-        coef = (-16 * (x_formula ** 2) + 80 * x_formula)*0.1
-
-        if progress < 0.5 :
-
-            spiralX = x + (progress*50)*math.cos(progress*100)*random.uniform(0,1.2)
-            spiralY = y + (progress*50)*math.sin(progress*100)*random.uniform(0,1.2)
-
-        else : 
-
-            spiralX = x + (progress*50)*math.cos(progress*100)*random.uniform(0,1.2)
-            spiralY = y + (progress*50)*math.sin(progress*100)*random.uniform(0,1.2)
-
-        if progress <= 0.5 :
+            # DRAW STAR AS A SMALL POLYGON (TRIANGLE)
+            pygame.draw.polygon(
+                self.screen,
+                (255 - randomOpacity, 255 - randomOpacity, 255 - randomOpacity),
+                [(randomWidth + 1, randomHeight + 0),
+                 (randomWidth + 2, randomHeight + 2),
+                 (randomWidth + 0, randomHeight + 2)]
+            )
             
-            pygame.draw.polygon(self.screen, (progress*2*randomR*random.uniform(0,0.3), progress*2*randomG*random.uniform(0,0.5), progress*2*randomB), [(spiralX, spiralY), (spiralX+0.5, spiralY+1), (spiralX+1, spiralY)])
+            # STORE STAR COORDINATES AND COLOR FOR FUTURE UPDATES
+            self.tabStarsWidth.append(randomWidth)
+            self.tabStarsHeight.append(randomHeight)
+            self.tabStarsColors.append(255 - randomOpacity)
 
-        else :
+    def moveAllStars(self, nStars: int) -> None:
+        # UPDATE POSITION OF ALL STARS WITH WRAPPING AT SCREEN EDGES
+        for i in range(nStars):
+            # ERASE THE STAR AT ITS PREVIOUS POSITION BY DRAWING BLACK POLYGON
+            pygame.draw.polygon(
+                self.screen,
+                (0, 0, 0),
+                [(self.tabStarsWidth[i] + 1, self.tabStarsHeight[i] + 0),
+                 (self.tabStarsWidth[i] + 2, self.tabStarsHeight[i] + 2),
+                 (self.tabStarsWidth[i] + 0, self.tabStarsHeight[i] + 2)]
+            )
+            
+            # UPDATE STAR POSITION WITH WRAPPING USING MODULO OPERATOR
+            self.tabStarsHeight[i] = (self.tabStarsHeight[i] + 0.01) % self.screenHeight
+            self.tabStarsWidth[i] = (self.tabStarsWidth[i] + 0.1) % self.screenWidth
 
-            pygame.draw.polygon(self.screen, (0, 0, 0), [(spiralX, spiralY), (spiralX+0.5, spiralY+1), (spiralX+1, spiralY)])
+            # REDRAW STAR AT NEW POSITION WITH ORIGINAL COLOR
+            pygame.draw.polygon(
+                self.screen,
+                (self.tabStarsColors[i], self.tabStarsColors[i], self.tabStarsColors[i]),
+                [(self.tabStarsWidth[i] + 1, self.tabStarsHeight[i] + 0),
+                 (self.tabStarsWidth[i] + 2, self.tabStarsHeight[i] + 2),
+                 (self.tabStarsWidth[i] + 0, self.tabStarsHeight[i] + 2)]
+            )
 
-    def destroyRandomStar(self, nStars):
+    def drawSupnovaAtStage(
+        self,
+        x: float,
+        y: float,
+        elapsedTime: float,
+        randomR: int,
+        randomG: int,
+        randomB: int,
+        supnova_dict: Dict[str, Any]
+    ) -> None:
+        # DRAW SUPERNOVA ANIMATION WITH SPIRAL EFFECT OVER TIME
+        # CALCULATE ANIMATION PROGRESS AS FRACTION OF TOTAL DURATION
+        progress: float = elapsedTime / self.supnovaDuration
+
+        # CALCULATE SPIRAL POSITION USING TRIGONOMETRIC FUNCTIONS
+        spiralX: int = int(x) + int((progress * 50) * math.cos(progress * 100) * random.uniform(0, 1.2))
+        spiralY: int = int(y) + int((progress * 50) * math.sin(progress * 100) * random.uniform(0, 1.2))
+
+        if progress < 0.5:
+            # FIRST HALF: DRAW EXPANDING BRIGHT SPIRAL WITH INCREASING COLOR INTENSITY
+            pygame.draw.polygon(
+                self.screen,
+                (progress * 2 * randomR * random.uniform(0, 1),
+                 progress * 2 * randomG * random.uniform(0, 1),
+                 progress * 2 * randomB),
+                [(spiralX, spiralY),
+                 (spiralX + 0.5, spiralY + 1),
+                 (spiralX + 1, spiralY)]
+            )
+        else:
+            # SECOND HALF: ERASE THE PREVIOUS POSITION STORED IN THE DICTIONARY
+            if supnova_dict['spiralX'] is not None:
+                pygame.draw.polygon(
+                    self.screen,
+                    (0, 0, 0),
+                    [(supnova_dict['spiralX'], supnova_dict['spiralY']),
+                     (supnova_dict['spiralX'] + 0.5, supnova_dict['spiralY'] + 1),
+                     (supnova_dict['spiralX'] + 1, supnova_dict['spiralY'])]
+                )
+
+        # SAVE CURRENT POSITION FOR NEXT FRAME TO ENABLE ERASING
+        supnova_dict['spiralX'] = spiralX
+        supnova_dict['spiralY'] = spiralY
+
+    def destroyRandomStar(self, nStars: int) -> None:
+        # SELECT AND DESTROY A RANDOM STAR, CREATING A SUPERNOVA ANIMATION
         if nStars > 0:
-            randomStars = int(random.uniform(0, nStars))
-            x = self.tabStarsWidth[randomStars]
-            y = self.tabStarsHeight[randomStars]
-            pygame.draw.polygon(self.screen, (0, 0, 0), [(x+1, y), (x+2, y+2), (x, y+2)])
+            # PICK A RANDOM STAR INDEX
+            randomStars: int = int(random.uniform(0, nStars))
+            x: float = self.tabStarsWidth[randomStars]
+            y: float = self.tabStarsHeight[randomStars]
+            
+            # ERASE THE STAR FROM SCREEN
+            pygame.draw.polygon(
+                self.screen,
+                (0, 0, 0),
+                [(x + 1, y), (x + 2, y + 2), (x, y + 2)]
+            )
+            
+            # REMOVE STAR DATA FROM TRACKING LISTS
             del self.tabStarsWidth[randomStars]
             del self.tabStarsHeight[randomStars]
-            
-            # Crée une supernova active
+
+            # CREATE NEW SUPERNOVA ENTRY WITH INITIAL PARAMETERS
             self.supnovaActiveList.append({
                 'x': x,
                 'y': y,
                 'startTime': time.time(),
                 'randomR': int(random.uniform(0, 255)),
                 'randomG': int(random.uniform(0, 255)),
-                'randomB': int(random.uniform(0, 255))
+                'randomB': int(random.uniform(0, 255)),
+                'spiralX': None,
+                'spiralY': None
             })
-            
-            nStars -= 1
 
-
-
-    def onInit(self):
+    def onInit(self) -> None:
+        # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 - 300, self.screenHeight/2), 100, math.pi/2)
+        # CREATE SPACESHIP AT CENTER OF SCREEN
+        spaceShip: SpaceShip = SpaceShip(
+            Vector2(self.screenWidth / 2 - 300, self.screenHeight / 2),
+            100,
+            math.pi / 2
+        )
 
-        
+        # MAIN GAME LOOP
         while self.running:
-            currentTime = time.time()
-            if ((int(currentTime - self.startTime)) >= 1):
+            currentTime: float = time.time()
+            
+            # TRIGGER STAR DESTRUCTION EVERY 5 SECONDS
+            if int(currentTime - self.startTime) >= 5:
                 self.destroyRandomStar(len(self.tabStarsHeight))
+            
+            # UPDATE POSITIONS OF ALL STARS
             self.moveAllStars(len(self.tabStarsHeight))
 
-            for supnova in self.supnovaActiveList[:]:  # [:] pour copier la liste
-                elapsed = time.time() - supnova['startTime']
+            # UPDATE AND DRAW ALL ACTIVE SUPERNOVAS
+            for supnova in self.supnovaActiveList[:]:  # [:] CREATES A COPY TO SAFELY ITERATE WHILE REMOVING
+                elapsed: float = time.time() - supnova['startTime']
+                
+                # DRAW SUPERNOVA IF STILL ACTIVE
                 if elapsed < self.supnovaDuration:
                     self.drawSupnovaAtStage(
                         supnova['x'],
@@ -117,23 +189,27 @@ class Game:
                         elapsed,
                         supnova['randomR'],
                         supnova['randomG'],
-                        supnova['randomB']
+                        supnova['randomB'],
+                        supnova
                     )
                 else:
+                    # REMOVE EXPIRED SUPERNOVA FROM ACTIVE LIST
                     self.supnovaActiveList.remove(supnova)
-        
+
+            # HANDLE PYGAME EVENTS (QUIT, INPUT, ETC.)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-            
-            pygame.display.flip()  
+
+            # DRAW SPACESHIP AND UPDATE DISPLAY
             spaceShip.drawShip(self.screen)
-        
             pygame.display.flip()
 
-
-
+        # CLEANUP: CLOSE PYGAME
         pygame.quit()
 
-game = Game()
-game.onInit()
+
+# ENTRY POINT: CREATE GAME INSTANCE AND START
+if __name__ == "__main__":
+    game: Game = Game()
+    game.onInit()
