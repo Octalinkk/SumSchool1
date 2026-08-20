@@ -114,14 +114,14 @@ def aggregatePitchesByNote(f0: numpy.ndarray, pitchTimes: numpy.ndarray, onset_d
     notePitches: list = []
 
     for i in range(len(onset_times)):
-        debut = onset_times[i]
-        fin = onset_times[i + 1] if i + 1 < len(onset_times) else pitchTimes[-1]
+        startNote = onset_times[i]
+        endNote = onset_times[i + 1] if i + 1 < len(onset_times) else pitchTimes[-1]
 
-        masque = (pitchTimes >= debut) & (pitchTimes < fin)
-        frequencesDeLaNote = f0[masque]
+        masque = (pitchTimes >= startNote) & (pitchTimes < endNote)
+        NoteFreq = f0[masque]
 
-        pitchDeLaNote = numpy.median(frequencesDeLaNote)
-        notePitches.append(pitchDeLaNote)
+        PitchNote = numpy.median(NoteFreq)
+        notePitches.append(PitchNote)
 
     return numpy.array(notePitches)
 
