@@ -4,6 +4,7 @@ import librosa
 import pygame
 import numpy as numpy
 import matplotlib.pyplot as plt
+import pretty_midi
 
 from pygame import mixer as mixer
 from librosa import display
@@ -26,17 +27,54 @@ def mp3ToMidi(fileName: str) -> None :
 def wavToMidi(wavFile: str) -> None:
     hopLength: int = 512
     waveForm, sampleRate = librosa.load(wavFile, sr=None)
-    print(sampleRate)
+    
     onset_env, onset_peaks, onset_detect = detectOnSets(waveForm, sampleRate, hopLength)
     f0, pitchTimes = detectPitchesCqt(waveForm, sampleRate, hopLength)
 
-    onset_times: numpy.ndarray = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
-    notePitches: numpy.ndarray = aggregatePitchesByNote(f0, pitchTimes, onset_detect, sampleRate, hopLength)
-
-    print(f"Notes start : {onset_times}") #print de debug a delete après
+    onset_times = librosa.frames_to_time(onset_detect, sr=sampleRate, hop_length=hopLength)
+    notePitches = aggregatePitchesByNote(f0, pitchTimes, onset_detect, sampleRate, hopLength)
+    
+    total_duration = librosa.get_duration(y=waveForm, sr=sampleRate)
+    
+    midi_data = midi_builder(onset_times=onset_times, note_pitches=notePitches, total_duration=total_duration)
+    midi_writer(midi_data)
+    '''print(f"Notes start : {onset_times}") #print de debug a delete après
     print(f"Notes pitches : {notePitches}")#print de debug a delete après
-    print(f"Number of notes : {notePitches.size}")#print de debug a delete après
+    print(f"Number of notes : {notePitches.size}")#print de debug a delete après'''
     #plotOnsetAnalysis(waveForm, sampleRate, onset_env, onset_peaks, onset_detect, hopLength, r"./Image/test.png") #a remplacer par le chjemin de fichier qu il faut pas garder le meme sinon tout casser si on veux sauvegarder l'image
+
+def midi_builder(onset_times: numpy.ndarray, note_pitches: numpy.ndarray, total_duration: float): 
+    midi_data = []
+    
+    for n in range(len(onset_times)):
+        pitch_hz = note_pitches[n]
+        if numpy.isnan(pitch_hz) or pitch_hz <= 0:
+            continue
+            
+        midi_pitch = int(round(librosa.hz_to_midi(pitch_hz)))
+        midi_pitch = max(0, min(127, midi_pitch))
+        
+        start_time = onset_times[n]
+        end_time = onset_times[n + 1] if n < len(onset_times) - 1 else total_duration
+
+        midi_data.append((midi_pitch, start_time, end_time))
+    
+    return midi_data
+
+def midi_writer(midi_data: tuple):
+    midi_object = pretty_midi.PrettyMIDI()
+    cello = pretty_midi.Instrument(program=1)
+    i = 0
+    for element in midi_data:
+        print(i) #print de debug a delete
+        i+=1 #print de debug a delete
+       
+        # Create a Note instance for this note, starting at 0s and ending at .5s
+        note = pretty_midi.Note(velocity=100, pitch=element[0], start=element[1], end=element[2])
+        # Add it to our cello instrument
+        cello.notes.append(note)
+    midi_object.instruments.append(cello)
+    midi_object.write('./Midi/sound.mid')
 
 
 def loadAudio(wavFile: str) -> tuple[numpy.ndarray, int]:
