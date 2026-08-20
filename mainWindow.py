@@ -1,22 +1,19 @@
 import pygame
 import random
 import time
-<<<<<<< HEAD:mainWindow.py
-from SoundExtract import *
-=======
 from Spaceship import SpaceShip
 from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
+from SoundExtract import SoundExtract
 
->>>>>>> origin/Visual:nom.py
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
-    nStars: int = 1000
+    nStars: int = 10
     screenWidth: int = 1920
     screenHeight: int = 1080
-    supnovaDuration: int = 10
+    supnovaDuration: float = 0.5
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
     tabStarsWidth: List[float] = []
@@ -25,30 +22,15 @@ class Game:
     startTime: float = time.time()
     supnovaActiveList: List[Dict[str, Any]] = []
 
-<<<<<<< HEAD:mainWindow.py
-    nStars = 1000
-    screenWidth = 1280
-    screenHeight = 768
-    tabStarsWidth = []      # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
-    tabStarsHeight = []     # LISTS OF COORDS IN ORDER TO DELETE AND MODIFY EACH STARS
-    tabStarsColors = []     # LISTS TO STORE THE COLORS OF THE STARS
 
     def __init__(self):
-        self.screen = None
-        self.running = True
+        self.screen: Optional[pygame.Surface] = None
+        self.running: bool = True
         self.extract = SoundExtract("test2.mid")
         self.Instr1Notes = self.extract.getNotesForIntru(0)
 
-    def test_pygame_initialization(self):
-=======
-    def __init__(self) -> None:
-        # INITIALIZE PYGAME SCREEN AND RUNNING STATE
-        self.screen: Optional[pygame.Surface] = None
-        self.running: bool = True
-
     def test_pygame_initialization(self) -> None:
         # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
->>>>>>> origin/Visual:nom.py
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         pygame.display.set_caption("APP")
@@ -175,19 +157,14 @@ class Game:
                 'spiralY': None
             })
 
-<<<<<<< HEAD:mainWindow.py
-
-
-    def onInit(self):
-=======
     def onInit(self) -> None:
         # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
->>>>>>> origin/Visual:nom.py
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         pygame.mixer.music.load("test2.mid")
         
-<<<<<<< HEAD:mainWindow.py
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2, self.screenHeight/2),0)
+
         pygame.mixer.music.play()
         
         # Index to check next note
@@ -204,32 +181,12 @@ class Game:
                     noteTimestmp = self.Instr1Notes[nextNoteIdx].start
                     
                     if currentTime >= noteTimestmp:
-                        self.deleteARandomStar(len(self.tabStarsHeight))
+                        #self.screen.fill((100, 100, 100))
+                        self.destroyRandomStar(len(self.tabStarsHeight))
                         nextNoteIdx += 1 
 
             self.moveAllStars(len(self.tabStarsHeight))
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-            
-            pygame.display.flip() 
-        
-=======
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2, self.screenHeight/2),0)
 
-        # MAIN GAME LOOP
-        while self.running:
-            currentTime: float = time.time()
-            
-            # TRIGGER STAR DESTRUCTION EVERY 5 SECONDS
-            if int(currentTime - self.startTime) >= 5:
-                self.destroyRandomStar(len(self.tabStarsHeight))
-            
-            # UPDATE POSITIONS OF ALL STARS
-            self.moveAllStars(len(self.tabStarsHeight))
-
-            # UPDATE AND DRAW ALL ACTIVE SUPERNOVAS
             for supnova in self.supnovaActiveList[:]:  # [:] CREATES A COPY TO SAFELY ITERATE WHILE REMOVING
                 elapsed: float = time.time() - supnova['startTime']
                 
@@ -248,17 +205,15 @@ class Game:
                     # REMOVE EXPIRED SUPERNOVA FROM ACTIVE LIST
                     self.supnovaActiveList.remove(supnova)
 
-            # HANDLE PYGAME EVENTS (QUIT, INPUT, ETC.)
+            spaceShip.drawShip(self.screen)
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-
-            # DRAW SPACESHIP AND UPDATE DISPLAY
-            spaceShip.drawShip(self.screen)
+            
             pygame.display.flip()
 
         # CLEANUP: CLOSE PYGAME
->>>>>>> origin/Visual:nom.py
         pygame.quit()
 
 
