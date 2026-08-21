@@ -6,11 +6,12 @@ from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
 from SoundExtract import SoundExtract
+from Triangle import Triangle
 
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
-    nStars: int = 10
+    nStars: int = 1000
     screenWidth: int = 1920
     screenHeight: int = 1080
     supnovaDuration: float = 0.5
@@ -26,11 +27,7 @@ class Game:
     def __init__(self):
         self.screen: Optional[pygame.Surface] = None
         self.running: bool = True
-<<<<<<< HEAD:mainWindow.py
-        self.extract = SoundExtract("test2.mid")
-=======
-        self.extract = SoundExtract("test3.mid")
->>>>>>> Visual:nom.py
+        self.extract = SoundExtract("C:/Users/rubat/IdeaProjects/T2D/data/music/midiplayer/brahms_lullaby.mid")
         self.Instr1Notes = self.extract.getNotesForIntru(0)
 
     def test_pygame_initialization(self) -> None:
@@ -45,7 +42,7 @@ class Game:
             # GENERATE RANDOM POSITION AND OPACITY FOR EACH STAR
             randomWidth: int = int(random.uniform(0, self.screenWidth))
             randomHeight: int = int(random.uniform(0, self.screenHeight))
-            randomOpacity: int = int(random.uniform(0, 255))
+            randomOpacity: int = int(random.uniform(0, 205))
             
             # DRAW STAR AS A SMALL POLYGON (TRIANGLE)
             pygame.draw.polygon(
@@ -101,34 +98,40 @@ class Game:
         progress: float = elapsedTime / self.supnovaDuration
 
         # CALCULATE SPIRAL POSITION USING TRIGONOMETRIC FUNCTIONS
-        spiralX: int = int(x) + int((progress * 50) * math.cos(progress * 100) * random.uniform(0, 1.2))
-        spiralY: int = int(y) + int((progress * 50) * math.sin(progress * 100) * random.uniform(0, 1.2))
+        spiralX: int = int(x) + int((progress * 100) * math.cos(progress * 100) * random.uniform(0, 1.2))
+        spiralY: int = int(y) + int((progress * 100) * math.sin(progress * 100) * random.uniform(0, 1.2))
 
         if progress < 0.5:
             # FIRST HALF: DRAW EXPANDING BRIGHT SPIRAL WITH INCREASING COLOR INTENSITY
-            pygame.draw.polygon(
-                self.screen,
-                (progress * 2 * randomR * random.uniform(0, 1),
-                 progress * 2 * randomG * random.uniform(0, 1),
-                 progress * 2 * randomB),
-                [(spiralX, spiralY),
-                 (spiralX + 0.5, spiralY + 1),
-                 (spiralX + 1, spiralY)]
-            )
+
+            angle = random.uniform(0, 6.28)
+
+            vec1 = Vector2(spiralX, spiralY)
+            vec2 = Vector2(spiralX + random.uniform(2.5, 5), spiralY + random.uniform(5, 10))
+            vec3 = Vector2(spiralX + random.uniform(7.5, 15), spiralY)
+
+            tri = Triangle(vec1,vec2,vec3)
+
+            supnova_dict['triangle'].append(tri)
+            supnova_dict['spiralX'].append(spiralX)
+            supnova_dict['spiralY'].append(spiralY)
+
+            tri.rotate(Vector2(spiralX,spiralY),angle)
+            tri.draw(self.screen,(progress * 2 * randomR * random.uniform(0, 1),progress * 2 * randomG * random.uniform(0, 1),progress * 2 * randomB))
+
         else:
             # SECOND HALF: ERASE THE PREVIOUS POSITION STORED IN THE DICTIONARY
-            if supnova_dict['spiralX'] is not None:
-                pygame.draw.polygon(
-                    self.screen,
-                    (0, 0, 0),
-                    [(supnova_dict['spiralX'], supnova_dict['spiralY']),
-                     (supnova_dict['spiralX'] + 0.5, supnova_dict['spiralY'] + 1),
-                     (supnova_dict['spiralX'] + 1, supnova_dict['spiralY'])]
-                )
+            if supnova_dict['triangle'] is not None:
 
-        # SAVE CURRENT POSITION FOR NEXT FRAME TO ENABLE ERASING
-        supnova_dict['spiralX'] = spiralX
-        supnova_dict['spiralY'] = spiralY
+                for i in range (len(supnova_dict['triangle'])):
+
+                    triErase = supnova_dict['triangle'][i]
+                    x = supnova_dict['spiralX'][i]
+                    y = supnova_dict['spiralY'][i]
+
+                    
+                    triErase.draw(self.screen,(0,0,0))  
+
 
     def destroyRandomStar(self, nStars: int) -> None:
         # SELECT AND DESTROY A RANDOM STAR, CREATING A SUPERNOVA ANIMATION
@@ -157,19 +160,16 @@ class Game:
                 'randomR': int(random.uniform(0, 255)),
                 'randomG': int(random.uniform(0, 255)),
                 'randomB': int(random.uniform(0, 255)),
-                'spiralX': None,
-                'spiralY': None
+                'triangle': [],
+                'spiralX': [],
+                'spiralY': []
             })
 
     def onInit(self) -> None:
         # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
-<<<<<<< HEAD:mainWindow.py
-        pygame.mixer.music.load("test2.mid")
-=======
-        pygame.mixer.music.load("test3.mid")
->>>>>>> Visual:nom.py
+        pygame.mixer.music.load("C:/Users/rubat/IdeaProjects/T2D/data/music/midiplayer/brahms_lullaby.mid")
         
         spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2),0)
 
@@ -213,11 +213,8 @@ class Game:
                     # REMOVE EXPIRED SUPERNOVA FROM ACTIVE LIST
                     self.supnovaActiveList.remove(supnova)
 
-<<<<<<< HEAD:mainWindow.py
-=======
             spaceShip.eraseDrawing(self.screen)
             spaceShip.rotateShip(Vector2(self.screenWidth/2, self.screenHeight/2), 0.001)
->>>>>>> Visual:nom.py
             spaceShip.drawShip(self.screen)
             
             for event in pygame.event.get():
