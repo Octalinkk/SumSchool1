@@ -26,7 +26,11 @@ class Game:
     def __init__(self):
         self.screen: Optional[pygame.Surface] = None
         self.running: bool = True
+<<<<<<< HEAD:mainWindow.py
         self.extract = SoundExtract("test2.mid")
+=======
+        self.extract = SoundExtract("test3.mid")
+>>>>>>> Visual:nom.py
         self.Instr1Notes = self.extract.getNotesForIntru(0)
 
     def test_pygame_initialization(self) -> None:
@@ -161,9 +165,13 @@ class Game:
         # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
+<<<<<<< HEAD:mainWindow.py
         pygame.mixer.music.load("test2.mid")
+=======
+        pygame.mixer.music.load("test3.mid")
+>>>>>>> Visual:nom.py
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2, self.screenHeight/2),0)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2),0)
 
         pygame.mixer.music.play()
         
@@ -205,6 +213,11 @@ class Game:
                     # REMOVE EXPIRED SUPERNOVA FROM ACTIVE LIST
                     self.supnovaActiveList.remove(supnova)
 
+<<<<<<< HEAD:mainWindow.py
+=======
+            spaceShip.eraseDrawing(self.screen)
+            spaceShip.rotateShip(Vector2(self.screenWidth/2, self.screenHeight/2), 0.001)
+>>>>>>> Visual:nom.py
             spaceShip.drawShip(self.screen)
             
             for event in pygame.event.get():

@@ -6,11 +6,11 @@ class SpaceShip():
     def __init__(self, origin:Vector2, seed):
         self.angle = 0
         self.origin = origin
-        self.headPoints:list[Vector2] = []
-        self.bodyPoints:list[Vector2] = []
-        self.wingsPoints:list[Vector2] = []
-        self.propPoints:list[Vector2] = []
-        self.boostPoints:list[Vector2] = []
+        self.headPoints:list[Triangle] = []
+        self.bodyPoints:list[Triangle] = []
+        self.wingsPoints:list[Triangle] = []
+        self.propPoints:list[Triangle] = []
+        self.boostPoints:list[Triangle] = []
 
           
         self.sideLen:int = 70
@@ -35,7 +35,15 @@ class SpaceShip():
             Vector2((positionX + radius * math.cos(angle2), positionY + radius * math.sin(angle2)))))
 
     def rotateShip(self, target:Vector2, angleRad:float):
-        ...
+        for triangle in self.headPoints:
+            triangle.rotate(target, angleRad)
+        for triangle in self.bodyPoints:
+                    triangle.rotate(target, angleRad)
+        for triangle in self.wingsPoints:
+                    triangle.rotate(target, angleRad)
+        for triangle in self.propPoints:
+                    triangle.rotate(target, angleRad)
+
 
     def genShip(self):
         self.genHead1()
@@ -43,15 +51,22 @@ class SpaceShip():
         self.genWings1()
         self.genProp1()
 
-    def drawShip(self, screen):
-        self.drawPart(screen, self.headPoints)
-        self.drawPart(screen, self.bodyPoints)
-        self.drawPart(screen, self.wingsPoints)
-        self.drawPart(screen, self.propPoints)
+    def eraseDrawing(self, screen):
+        self.drawPart(screen, self.headPoints, (0, 0, 0))
+        self.drawPart(screen, self.bodyPoints, (0, 0, 0))
+        self.drawPart(screen, self.wingsPoints, (0, 0, 0))
+        self.drawPart(screen, self.propPoints, (0, 0, 0))
 
-    def drawPart(self, screen, datas:list[Triangle]):
+    def drawShip(self, screen):
+            self.eraseDrawing(screen)
+            self.drawPart(screen, self.headPoints)
+            self.drawPart(screen, self.bodyPoints)
+            self.drawPart(screen, self.wingsPoints)
+            self.drawPart(screen, self.propPoints)
+
+    def drawPart(self, screen, datas:list[Triangle], color=(255, 255, 0)):
         for triangle in datas:
-            triangle.draw(screen)
+            triangle.draw(screen, color)
 
     def genHead1(self):
         point1 = Vector2(self.origin.x + self.sideLen * math.cos(self.angleBody + self.angle), self.origin.y + self.sideLen * math.sin(self.angleBody + self.angle))
