@@ -37,17 +37,24 @@ class SpaceShip():
     def rotateShip(self, target:Vector2, angleRad:float):
         for triangle in self.headPoints:
             triangle.rotate(target, angleRad)
+
         for triangle in self.bodyPoints:
-                    triangle.rotate(target, angleRad)
+            triangle.rotate(target, angleRad)
+
         for triangle in self.wingsPoints:
-                    triangle.rotate(target, angleRad)
+            triangle.rotate(target, angleRad)
+
         for triangle in self.propPoints:
-                    triangle.rotate(target, angleRad)
+            triangle.rotate(target, angleRad)
+
+        if (len(self.boostPoints) > 0):
+            for triangle in self.boostPoints:
+                triangle.rotate(target, angleRad)
 
 
     def genShip(self):
         self.genHead1()
-        self.genBody1()
+        self.genBody2()
         self.genWings1()
         self.genProp1()
 
@@ -56,6 +63,9 @@ class SpaceShip():
         self.drawPart(screen, self.bodyPoints, (0, 0, 0))
         self.drawPart(screen, self.wingsPoints, (0, 0, 0))
         self.drawPart(screen, self.propPoints, (0, 0, 0))
+        if len(self.boostPoints) > 0:
+            self.drawPart(screen, self.boostPoints, (0, 0, 0))
+             
 
     def drawShip(self, screen):
             self.eraseDrawing(screen)
@@ -63,6 +73,7 @@ class SpaceShip():
             self.drawPart(screen, self.bodyPoints)
             self.drawPart(screen, self.wingsPoints)
             self.drawPart(screen, self.propPoints)
+            self.drawPart(screen, self.boostPoints)
 
     def drawPart(self, screen, datas:list[Triangle], color=(255, 255, 0)):
         for triangle in datas:
