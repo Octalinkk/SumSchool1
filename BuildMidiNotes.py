@@ -31,7 +31,7 @@ onset_times = numpy.array([0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.20, 1.40])
 
 
 # rajouter la différentiation des instruments
-def midi_builder(onset_times, pitch_times, f0):
+def midi_builder(onset_times, pitch_times, f0): 
     i = 0   
     midi_data = []
     for n, times in enumerate(onset_times):
@@ -48,6 +48,9 @@ def midi_builder(onset_times, pitch_times, f0):
                     duration = pitch_times[pitch_times.size-1] - onset_times[n]
                     midi_data.append((note, onset_times[n], pitch_times[pitch_times.size-1]))
                 print("note = ", note, " start = ", onset_times[n], "duration = ", duration) #print de debug a delete
+    print(f"onset_times : {onset_times}") #temps de chaque debut de note
+    print(f"f0 : {f0}") #frequence des notes
+    print(pitch_times) #notePitches
     return midi_data
 
 def midi_writer(midi_data: tuple):
@@ -63,7 +66,7 @@ def midi_writer(midi_data: tuple):
         # Add it to our cello instrument
         cello.notes.append(note)
     midi_object.instruments.append(cello)
-    midi_object.write('sound.mid')
+    midi_object.write('./Midi/sound.mid')
 
 
 midi_writer(midi_builder(onset_times,pitch_times,f0))

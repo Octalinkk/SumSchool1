@@ -1,14 +1,4 @@
-from SoundExtract import *
+from converter import mp3ToMidi
 
-print ("Project start mdr")
-extract = SoundExtract(mp3ToMidi(r"C:\Users\adrie\Documents\SummerSchool1\SumSchool1\Song\pinkPanther_Both.mp3")) 
-
-print("========================================")
-print("============= Instrument 1 =============")
-print("========================================")
-var1 = extract.getNotesForIntru(0)
-print('\n')
-print("========================================")
-print("============= Instrument 2 =============")
-print("========================================")
-var2 = extract.getNotesForIntru(1)
+if __name__ == "__main__":
+    mp3ToMidi(r"./Song/Ecossaise_Trumpet.mp3") #a changer le chemin d'acces pour le prochain utilisatuer
