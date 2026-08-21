@@ -6,6 +6,7 @@ from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
 from MidiDataExtractor import MidiDataExtractor
+from Grammar import Grammar
 
 
 class Game:
@@ -13,8 +14,9 @@ class Game:
     nStars: int = 1000
     screenWidth: int = 1920
     screenHeight: int = 1080
-    supnovaDuration: float = 0.5
-    midi_path:str = "test3.mid"
+    supnovaDuration: float = 0.3
+    midi_path:str = "test2.mid"
+    grammar = Grammar(midi_path)
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
     tabStarsWidth: List[float] = []
@@ -28,7 +30,7 @@ class Game:
         self.screen: Optional[pygame.Surface] = None
         self.running: bool = True
         self.extract = MidiDataExtractor(self.midi_path)
-        self.Instr1Notes = self.extract.getNotesForIntru(0)
+        self.Instr1Notes = self.extract.getNotesForIntru(0)  
 
     def test_pygame_initialization(self) -> None:
         # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
@@ -57,10 +59,6 @@ class Game:
             self.tabStarsWidth.append(randomWidth)
             self.tabStarsHeight.append(randomHeight)
             self.tabStarsColors.append(255 - randomOpacity)
-
-    def generateSeed(self, path):
-        data = MidiDataExtractor(path)
-        return data.getNotesCount() * data.getMidiDuration() + data.getAvrgVelo * data.getAvrgPitch
 
 
     def moveAllStars(self, nStars: int) -> None:
@@ -170,6 +168,7 @@ class Game:
         pygame.mixer.music.load(self.midi_path)
         
         spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2),0)
+        self.grammar.shipGenGrammar(spaceShip)
 
         pygame.mixer.music.play()
         

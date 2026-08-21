@@ -16,8 +16,6 @@ class SpaceShip():
         self.sideLen:int = 70
         self.angleBody:float = self.degToRad(15)
 
-        self.genShip()
-
     def degToRad(self, angle):
         return angle * math.pi / 180
 
@@ -33,6 +31,7 @@ class SpaceShip():
             triangles.append(Triangle(Vector2(positionX, positionY),
                                             Vector2((positionX + radius * math.cos(angle1), positionY + radius * math.sin(angle1))),
             Vector2((positionX + radius * math.cos(angle2), positionY + radius * math.sin(angle2)))))
+        return triangles
 
     def rotateShip(self, target:Vector2, angleRad:float):
         for triangle in self.headPoints:
@@ -50,13 +49,6 @@ class SpaceShip():
         if (len(self.boostPoints) > 0):
             for triangle in self.boostPoints:
                 triangle.rotate(target, angleRad)
-
-
-    def genShip(self):
-        self.genHead1()
-        self.genBody2()
-        self.genWings1()
-        self.genProp1()
 
     def eraseDrawing(self, screen):
         self.drawPart(screen, self.headPoints, (0, 0, 0))
@@ -126,7 +118,7 @@ class SpaceShip():
     def genHead2(self):
         radius = 30
         center = Vector2(self.origin.x + (radius+10) * math.cos(self.angle), self.origin.y + (radius+10) * math.sin(self.angle)) 
-        circle = self.calcCircleOfTriangles(radius, center, 10)
+        circle = self.calcCircleOfTriangles(radius, center, 360)
         point1 = Vector2(center.x + (radius) * math.cos(self.angle + self.degToRad(90)), center.y + (radius) * math.sin(self.angle + self.degToRad(90))) 
         point2 = Vector2(center.x + (radius) * math.cos(self.angle + self.degToRad(-90)), center.y + (radius) * math.sin(self.angle + self.degToRad(-90))) 
         border = Vector2(center.x + (radius) * math.cos(self.angle), center.y + (radius) * math.sin(self.angle)) 
@@ -135,7 +127,9 @@ class SpaceShip():
 
         #draw.polygon(screen, (255, 255, 0), [point1, point2, point3])         
         #draw.polygon(screen, (255, 255, 0), [point3, point2, point4]) 
-        self.headPoints = [circle, Triangle(point1, point2, point3), Triangle(point3, point2, point4)]
+        circle.append(Triangle(point1, point2, point3))
+        circle.append(Triangle(point3, point2, point4))
+        self.headPoints = circle
 
 
     def genBody2(self):
