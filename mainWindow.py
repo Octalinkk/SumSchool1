@@ -60,7 +60,8 @@ class Game:
 
     def generateSeed(self, path):
         data = MidiDataExtractor(path)
-        data.getNotesCount() * data.getMidiDuration()
+        return data.getNotesCount() * data.getMidiDuration() + data.getAvrgVelo * data.getAvrgPitch
+
 
     def moveAllStars(self, nStars: int) -> None:
         # UPDATE POSITION OF ALL STARS WITH WRAPPING AT SCREEN EDGES
