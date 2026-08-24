@@ -1,6 +1,7 @@
 from pygame import Vector2, draw
 import math
 from Triangle import Triangle
+from Palette import Palette
 
 class SpaceShip():
     def __init__(self, origin:Vector2, seed):
@@ -59,13 +60,13 @@ class SpaceShip():
             self.drawPart(screen, self.boostPoints, (0, 0, 0))
              
 
-    def drawShip(self, screen):
-            self.eraseDrawing(screen)
-            self.drawPart(screen, self.headPoints)
-            self.drawPart(screen, self.bodyPoints)
-            self.drawPart(screen, self.wingsPoints)
-            self.drawPart(screen, self.propPoints)
-            self.drawPart(screen, self.boostPoints)
+    def drawShip(self, screen, palette:Palette):
+        self.eraseDrawing(screen)
+        self.drawPart(screen, self.headPoints, palette.getPalette()[0])
+        self.drawPart(screen, self.propPoints, palette.getPalette()[3])
+        self.drawPart(screen, self.boostPoints, palette.getPalette()[4])
+        self.drawPart(screen, self.wingsPoints, palette.getPalette()[2])
+        self.drawPart(screen, self.bodyPoints, palette.getPalette()[1])
 
     def drawPart(self, screen, datas:list[Triangle], color=(255, 255, 0)):
         for triangle in datas:

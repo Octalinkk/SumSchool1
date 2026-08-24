@@ -3,11 +3,17 @@ from Spaceship import SpaceShip
 from pygame import Color
 import math
 import random
+from Palette import Palette
 
 class Grammar():
     def __init__(self, path):
         self.seed = self.generateSeed(path)
         self.SHIPGRAMMAR = None
+        self.PALETTEGRAMMAR  = {
+            "red": ["dark", "light", "normal"],
+            "green": ["dark", "light", "normal"],
+            "blue": ["dark", "light", "normal"]
+        }
 
     
 
@@ -29,7 +35,7 @@ class Grammar():
 
     def genPart(self, symbol, rng):
         options = self.SHIPGRAMMAR[symbol]
-        # Chose ship part decided by the seeded rng
+        # Choose ship part decided by the seeded rng
         chosen = rng.choice(options)
         if chosen != "":
             chosen()
@@ -45,7 +51,9 @@ class Grammar():
         self.genPart("booster", rng)
         
 
-    def paletteGenGrammar(self) -> Color:
+    def genPalette(self) -> Palette:
+        # Seeded rng
+        rng = random.Random(self.seed)
         # Get values from seed
         colors = {
             "red": int(str(self.seed)[5]), 
@@ -54,5 +62,11 @@ class Grammar():
         }
 
         colorAVRG:float = (colors['red'] + colors['green'] + colors['blue']) / 3
-        closest = min(colors, key=lambda weight: abs(colors[weight] - colorAVRG))
-        print(closest)
+        color = min(colors, key=lambda weight: abs(colors[weight] - colorAVRG))
+        return Palette(color, self.genPaletteAccent(color, rng), [rng.randint(0, 100) for _ in range(5)])
+
+
+    def genPaletteAccent(self, symbol, rng):
+        options = self.PALETTEGRAMMAR[symbol]
+        # Choose palette accent decided by the seeded rng
+        return rng.choice(options)

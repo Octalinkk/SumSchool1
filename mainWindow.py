@@ -15,7 +15,7 @@ class Game:
     screenWidth: int = 1920
     screenHeight: int = 1080
     supnovaDuration: float = 0.3
-    midi_path:str = "test2.mid"
+    midi_path:str = "test3.mid"
     grammar = Grammar(midi_path)
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
@@ -169,6 +169,7 @@ class Game:
         
         spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 200, self.screenHeight/2),0)
         self.grammar.genShip(spaceShip)
+        palette = self.grammar.genPalette()
 
         pygame.mixer.music.play()
         
@@ -212,7 +213,7 @@ class Game:
 
             spaceShip.eraseDrawing(self.screen)
             spaceShip.rotateShip(Vector2(self.screenWidth/2, self.screenHeight/2), 0.001)
-            spaceShip.drawShip(self.screen)
+            spaceShip.drawShip(self.screen, palette)
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
