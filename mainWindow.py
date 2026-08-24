@@ -167,8 +167,8 @@ class Game:
         self.drawStars(self.nStars)
         pygame.mixer.music.load(self.midi_path)
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2),0)
-        self.grammar.shipGenGrammar(spaceShip)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 200, self.screenHeight/2),0)
+        self.grammar.genShip(spaceShip)
 
         pygame.mixer.music.play()
         

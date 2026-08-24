@@ -1,10 +1,13 @@
 from MidiDataExtractor import MidiDataExtractor
 from Spaceship import SpaceShip
 from pygame import Color
+import math
+import random
 
 class Grammar():
     def __init__(self, path):
         self.seed = self.generateSeed(path)
+        self.SHIPGRAMMAR = None
 
     
 
@@ -13,52 +16,43 @@ class Grammar():
         seed = round((data.getNotesCount() * data.getMidiDuration() + data.getAvrgVelo() * data.getAvrgPitch()) * 10000)
         print(int(str(seed)[:8]))
         return int(str(seed)[:8])
-        # 1 : Chance for head
-        # 2 : Chance for body
-        # 3 : Chance for wings
-        # 4 : Chance for thruster
-        # 5 : Chance for extra boosters
-        # 6 : Chance for RED color
-        # 7 : Chance for GREEN color
-        # 8 : Chance for BLUE color
 
     def shipGenGrammar(self, spaceship:SpaceShip):
-        headSeed = int(str(self.seed)[0])
-        bodySeed = int(str(self.seed)[1])
-        wingsSeed = int(str(self.seed)[2])
-        propSeed = int(str(self.seed)[3])
-        boostSeed = int(str(self.seed)[4])
+        self.SHIPGRAMMAR  = {
+            "head": [spaceship.genHead2, spaceship.genHead1],
+            "body": [spaceship.genBody1, spaceship.genBody2],
+            "wings": [spaceship.genWings1, spaceship.genWings2],
+            "prop": [spaceship.genProp1, spaceship.genProp2, ""],
+            "booster": [spaceship.genBoosters, ""]
+        }
 
-        ###### HEAD RULE #####
-        if headSeed in range(0, 4):
-            spaceship.genHead1()
-        else:
-            spaceship.genHead2()
 
-        ###### BODY RULE #####
-        if bodySeed in range(0, 5):
-            spaceship.genBody1()
-        else:
-            spaceship.genBody2()
-            
-        ###### WINGS RULE #####
-        if wingsSeed in range(0, 5):
-            spaceship.genWings1()
-        else:
-            spaceship.genWings2()
+    def genPart(self, symbol, rng):
+        options = self.SHIPGRAMMAR[symbol]
+        # Chose ship part decided by the seeded rng
+        chosen = rng.choice(options)
+        if chosen != "":
+            chosen()
 
-        ###### THRUST RULE #####
-        if propSeed in range(0, 5):
-            spaceship.genProp1()
-        if propSeed in range(4, 8):
-            spaceship.genProp2()        
-
-        ###### EXTRA BOOSTER RULE #####
-        if boostSeed in range(0, 3):
-            spaceship.genBoosters()
+    def genShip(self, spaceship:SpaceShip):
+        self.shipGenGrammar(spaceship)
+        # Seeded rng
+        rng = random.Random(self.seed)
+        self.genPart("head", rng)
+        self.genPart("body", rng)
+        self.genPart("wings", rng)
+        self.genPart("prop", rng)
+        self.genPart("booster", rng)
         
 
-    def paletteGrammar(self) -> Color:
-        REDSeed = str(self.seed)[5]
-        GREENSeed = str(self.seed)[6]
-        BLUESeed = str(self.seed)[7]
+    def paletteGenGrammar(self) -> Color:
+        # Get values from seed
+        colors = {
+            "red": int(str(self.seed)[5]), 
+            "green": int(str(self.seed)[6]), 
+            "blue": int(str(self.seed)[7])
+        }
+
+        colorAVRG:float = (colors['red'] + colors['green'] + colors['blue']) / 3
+        closest = min(colors, key=lambda weight: abs(colors[weight] - colorAVRG))
+        print(closest)
