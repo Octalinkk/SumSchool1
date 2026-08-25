@@ -2,6 +2,7 @@ import pygame
 import random
 import time
 from Spaceship import SpaceShip
+from Planet import Planet
 from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
@@ -15,7 +16,7 @@ class Game:
     screenWidth: int = 1920
     screenHeight: int = 1080
     supnovaDuration: float = 0.3
-    midi_path:str = "test3.mid"
+    midi_path:str = "test1.mid"
     grammar = Grammar(midi_path)
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
@@ -167,8 +168,10 @@ class Game:
         self.test_pygame_initialization()
         self.drawStars(self.nStars)
         pygame.mixer.music.load(self.midi_path)
+
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 200, self.screenHeight/2), Vector2(self.screenWidth/2, self.screenHeight/2))
+        planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100)
+        spaceShip = SpaceShip(Vector2(planet.origin.x + planet.radius * 2, planet.origin.y), planet.origin)
         self.grammar.genShip(spaceShip)
         palette = self.grammar.genPalette(5) # Ship has 5 parts
 
@@ -200,7 +203,6 @@ class Game:
                     
                     if currentTime >= note1TimestmpStart:
                         #self.screen.fill((100, 100, 100))
-                        print("wasd")
                         spaceShip.fireBeam()
 
                     if currentTime >= note1TimestmpStop:
@@ -233,6 +235,7 @@ class Game:
             spaceShip.rotateShip(0.001)
             spaceShip.drawShip(self.screen, palette)
             spaceShip.drawBeam(self.screen)
+            planet.drawPlanet(self.screen)
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
