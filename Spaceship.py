@@ -1,21 +1,36 @@
 from pygame import Vector2, draw
 import math
 from Triangle import Triangle
+from Circle import Circle
 from Palette import Palette
 
 class SpaceShip():
-    def __init__(self, origin:Vector2, seed):
+    def __init__(self, origin:Vector2, target:Vector2):
         self.angle = 0
-        self.origin = origin
+        self.origin:Vector2 = origin
+        self.target:Vector2 = target
         self.headPoints:list[Triangle] = []
         self.bodyPoints:list[Triangle] = []
         self.wingsPoints:list[Triangle] = []
         self.propPoints:list[Triangle] = []
         self.boostPoints:list[Triangle] = []
+        self.beamPoints:list[Triangle] = []
+        self.isFiring:bool = False
 
           
         self.sideLen:int = 70
         self.angleBody:float = self.degToRad(15)
+        self.genBeam()
+
+    def fireBeam(self):
+        self.isFiring = True
+
+    def stopBeam(self):
+        self.isFiring = False
+
+    def drawBeam(self, screen):       
+        if self.isFiring: 
+            self.drawPart(screen, self.beamPoints, (0, 255, 255))
 
     def degToRad(self, angle):
         return angle * math.pi / 180
@@ -34,22 +49,26 @@ class SpaceShip():
             Vector2((positionX + radius * math.cos(angle2), positionY + radius * math.sin(angle2)))))
         return triangles
 
-    def rotateShip(self, target:Vector2, angleRad:float):
+    def rotateShip(self, angleRad:float):
         for triangle in self.headPoints:
-            triangle.rotate(target, angleRad)
+            triangle.rotate(self.target, angleRad)
 
         for triangle in self.bodyPoints:
-            triangle.rotate(target, angleRad)
+            triangle.rotate(self.target, angleRad)
 
         for triangle in self.wingsPoints:
-            triangle.rotate(target, angleRad)
+            triangle.rotate(self.target, angleRad)
 
-        for triangle in self.propPoints:
-            triangle.rotate(target, angleRad)
+        if (len(self.propPoints) > 0):
+            for triangle in self.propPoints:
+                triangle.rotate(self.target, angleRad)
 
         if (len(self.boostPoints) > 0):
             for triangle in self.boostPoints:
-                triangle.rotate(target, angleRad)
+                triangle.rotate(self.target, angleRad)
+
+        for triangle in self.beamPoints:
+            triangle.rotate(self.target, angleRad)
 
     def eraseDrawing(self, screen):
         self.drawPart(screen, self.headPoints, (0, 0, 0))
@@ -58,6 +77,7 @@ class SpaceShip():
         self.drawPart(screen, self.propPoints, (0, 0, 0))
         if len(self.boostPoints) > 0:
             self.drawPart(screen, self.boostPoints, (0, 0, 0))
+        self.drawPart(screen, self.beamPoints, (0, 0, 0))
              
 
     def drawShip(self, screen, palette:Palette):
@@ -119,7 +139,7 @@ class SpaceShip():
     def genHead2(self):
         radius = 30
         center = Vector2(self.origin.x + (radius+10) * math.cos(self.angle), self.origin.y + (radius+10) * math.sin(self.angle)) 
-        circle = self.calcCircleOfTriangles(radius, center, 360)
+        circle = Circle(radius, center, 360).triangles
         point1 = Vector2(center.x + (radius) * math.cos(self.angle + self.degToRad(90)), center.y + (radius) * math.sin(self.angle + self.degToRad(90))) 
         point2 = Vector2(center.x + (radius) * math.cos(self.angle + self.degToRad(-90)), center.y + (radius) * math.sin(self.angle + self.degToRad(-90))) 
         border = Vector2(center.x + (radius) * math.cos(self.angle), center.y + (radius) * math.sin(self.angle)) 
@@ -173,3 +193,13 @@ class SpaceShip():
         #draw.polygon(screen, (0, 0, 255), [anchor, point1, point3])         
         #draw.polygon(screen, (0, 0, 255), [anchor, point2, point4])
         self.propPoints = [Triangle(anchor, point3, point4), Triangle(anchor, point1, point3), Triangle(anchor, point2, point4)]
+
+    def genBeam(self):
+        
+        width = 10
+        point1 = Vector2(self.target.x + (width) * math.cos(self.angle + self.degToRad(-90)), self.target.y + (width) * math.sin((self.angle + self.degToRad(-90)))) 
+        point2 = Vector2(self.target.x + (width) * math.cos(self.angle + self.degToRad(90)), self.target.y + (width) * math.sin(self.angle + self.degToRad(90)))
+        point3 = Vector2(self.origin.x + (width) * math.cos(self.angle + self.degToRad(-90)), self.origin.y + (width) * math.sin(self.angle + self.degToRad(-90))) 
+        point4 = Vector2(self.origin.x + (width) * math.cos(self.angle + self.degToRad(90)), self.origin.y + (width) * math.sin(self.angle + self.degToRad(90)))
+
+        self.beamPoints = [Triangle(point1, point2, point3), Triangle(point3, point2, point4)]

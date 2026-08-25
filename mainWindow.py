@@ -31,6 +31,7 @@ class Game:
         self.running: bool = True
         self.extract = MidiDataExtractor(self.midi_path)
         self.Instr1Notes = self.extract.getNotesForIntru(0)  
+        self.Instr2Notes = self.extract.getNotesForIntru(1)  
 
     def test_pygame_initialization(self) -> None:
         # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
@@ -167,14 +168,15 @@ class Game:
         self.drawStars(self.nStars)
         pygame.mixer.music.load(self.midi_path)
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 200, self.screenHeight/2),0)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 200, self.screenHeight/2), Vector2(self.screenWidth/2, self.screenHeight/2))
         self.grammar.genShip(spaceShip)
-        palette = self.grammar.genPalette()
+        palette = self.grammar.genPalette(5) # Ship has 5 parts
 
         pygame.mixer.music.play()
         
         # Index to check next note
-        nextNoteIdx = 0
+        nextNoteSeq1Idx = 0
+        nextNoteSeq2Idx = 0
         
         while self.running:
             songPos = pygame.mixer.music.get_pos()            
@@ -183,13 +185,29 @@ class Game:
                 currentTime = songPos / 1000.0  # Convert to sec
                 
                 # Check timing with next note
-                if nextNoteIdx < len(self.Instr1Notes):
-                    noteTimestmp = self.Instr1Notes[nextNoteIdx].start
+                if nextNoteSeq2Idx < len(self.Instr2Notes):
+                    note2TimestmpStart = self.Instr2Notes[nextNoteSeq2Idx].start
                     
-                    if currentTime >= noteTimestmp:
+                    if currentTime >= note2TimestmpStart:
                         #self.screen.fill((100, 100, 100))
                         self.destroyRandomStar(len(self.tabStarsHeight))
-                        nextNoteIdx += 1 
+                        nextNoteSeq2Idx += 1 
+
+                # Check timing with next note
+                if nextNoteSeq1Idx < len(self.Instr1Notes):
+                    note1TimestmpStart = self.Instr1Notes[nextNoteSeq1Idx].start                    
+                    note1TimestmpStop = self.Instr1Notes[nextNoteSeq1Idx].end
+                    
+                    if currentTime >= note1TimestmpStart:
+                        #self.screen.fill((100, 100, 100))
+                        print("wasd")
+                        spaceShip.fireBeam()
+
+                    if currentTime >= note1TimestmpStop:
+                        #self.screen.fill((100, 100, 100))
+                        spaceShip.stopBeam()
+                        
+                        nextNoteSeq1Idx += 1 
 
             self.moveAllStars(len(self.tabStarsHeight))
 
@@ -212,8 +230,9 @@ class Game:
                     self.supnovaActiveList.remove(supnova)
 
             spaceShip.eraseDrawing(self.screen)
-            spaceShip.rotateShip(Vector2(self.screenWidth/2, self.screenHeight/2), 0.001)
+            spaceShip.rotateShip(0.001)
             spaceShip.drawShip(self.screen, palette)
+            spaceShip.drawBeam(self.screen)
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

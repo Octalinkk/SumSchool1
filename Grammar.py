@@ -51,7 +51,7 @@ class Grammar():
         self.genPart("booster", rng)
         
 
-    def genPalette(self) -> Palette:
+    def genPalette(self, nColor:int) -> Palette:
         # Seeded rng
         rng = random.Random(self.seed)
         # Get values from seed
@@ -63,7 +63,7 @@ class Grammar():
 
         colorAVRG:float = (colors['red'] + colors['green'] + colors['blue']) / 3
         color = min(colors, key=lambda weight: abs(colors[weight] - colorAVRG))
-        return Palette(color, self.genPaletteAccent(color, rng), [rng.randint(0, 100) for _ in range(5)])
+        return Palette(color, self.genPaletteAccent(color, rng), [rng.randint(0, 100) for _ in range(nColor)])
 
 
     def genPaletteAccent(self, symbol, rng):
