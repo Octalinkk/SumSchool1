@@ -2,6 +2,9 @@ from pygame import Vector2, draw
 import math
 
 class Triangle():
+
+    pi = math.pi
+
     def __init__(self, p1:Vector2, p2:Vector2, p3:Vector2,):
         self.angle = 0
         self.p1 = p1
