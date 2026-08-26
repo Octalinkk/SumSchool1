@@ -193,8 +193,7 @@ class Game:
                     note2TimestmpStart = self.Instr2Notes[nextNoteSeq2Idx].start
                     
                     if currentTime >= note2TimestmpStart:
-                        #self.screen.fill((100, 100, 100))
-                        self.destroyRandomStar(len(self.tabStarsHeight))
+                        self.destroyRandomStar()
                         nextNoteSeq2Idx += 1 
 
                 # Check timing with next note
