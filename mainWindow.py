@@ -10,12 +10,16 @@ from Triangle import Triangle
 
 
 class Star:
+
+    xMove = 0.1
+    yMove = 0.01
+
     def __init__(self, x: float, y: float, color: int):
         self.x = x
         self.y = y
         self.color = color
     
-    def draw(self, screen: pygame.Surface) -> None:
+    def drawSmallTriangle(self, screen: pygame.Surface) -> None:
         pygame.draw.polygon(
             screen,
             (self.color, self.color, self.color),
@@ -34,8 +38,8 @@ class Star:
         )
     
     def move(self, screen_width: float, screen_height: float) -> None:
-        self.x = (self.x + 0.1) % screen_width
-        self.y = (self.y + 0.01) % screen_height
+        self.x = (self.x + self.xMove) % screen_width
+        self.y = (self.y + self.yMove) % screen_height
 
 
 class Game:
@@ -44,6 +48,8 @@ class Game:
     screenWidth: int = 1920
     screenHeight: int = 1080
     supnovaDuration: float = 0.5
+    supnovaActiveTime: float = 10
+    supnovaDestructionTimeDuration: float = 0.5
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
     stars: List[Star] = []
@@ -61,75 +67,123 @@ class Game:
         # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
-        pygame.display.set_caption("APP")
+        pygame.display.set_caption("Animation")
 
     def drawStars(self, nStars: int) -> None:
         for i in range(nStars):
             randomWidth: float = random.uniform(0, self.screenWidth)
             randomHeight: float = random.uniform(0, self.screenHeight)
-            randomOpacity: int = int(random.uniform(0, 205))
+            randomOpacity: int = int(random.uniform(0, 170))
             
             color: int = 255 - randomOpacity
             
             star = Star(randomWidth, randomHeight, color)
-            star.draw(self.screen)
+            star.drawSmallTriangle(self.screen)
             self.stars.append(star)
 
     def moveAllStars(self) -> None:
         for star in self.stars:
             star.erase(self.screen)
             star.move(self.screenWidth, self.screenHeight)
-            star.draw(self.screen)
+            star.drawSmallTriangle(self.screen)
 
     def drawSupnovaAtStage(
         self,
         x: float,
         y: float,
         elapsedTime: float,
-        randomR: int,
-        randomG: int,
-        randomB: int,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        # DRAW SUPERNOVA ANIMATION WITH SPIRAL EFFECT OVER TIME
-        # CALCULATE ANIMATION PROGRESS AS FRACTION OF TOTAL DURATION
-        progress: float = elapsedTime / self.supnovaDuration
-
-        # CALCULATE SPIRAL POSITION USING TRIGONOMETRIC FUNCTIONS
-        spiralX: int = int(x) + int((progress * 100) * math.cos(progress * 100) * random.uniform(0, 1.2))
-        spiralY: int = int(y) + int((progress * 100) * math.sin(progress * 100) * random.uniform(0, 1.2))
-
-        if progress < 0.5:
-            # FIRST HALF: DRAW EXPANDING BRIGHT SPIRAL WITH INCREASING COLOR INTENSITY
-
-            angle = random.uniform(0, 6.28)
-
-            vec1 = Vector2(spiralX, spiralY)
-            vec2 = Vector2(spiralX + random.uniform(2.5, 5), spiralY + random.uniform(5, 10))
-            vec3 = Vector2(spiralX + random.uniform(7.5, 15), spiralY)
-
-            tri = Triangle(vec1,vec2,vec3)
-
-            supnova_dict['triangle'].append(tri)
-            supnova_dict['spiralX'].append(spiralX)
-            supnova_dict['spiralY'].append(spiralY)
-
-            tri.rotate(Vector2(spiralX,spiralY),angle)
-            tri.draw(self.screen,(progress * 2 * randomR * random.uniform(0, 1),progress * 2 * randomG * random.uniform(0, 1),progress * 2 * randomB))
-
+        """Dispatch vers la bonne phase en fonction du temps écoulé"""
+        
+        # PHASE 1: EXPANSION (0 à supnovaDuration)
+        if elapsedTime < self.supnovaDuration:
+            self._drawSupnovaExpansion(x, y, elapsedTime, supnova_dict)
+        
+        # PHASE 2: ACTIVE (supnovaDuration à supnovaDuration + supnovaActiveTime)
+        elif elapsedTime < self.supnovaDuration + self.supnovaActiveTime:
+            self._drawSupnovaActive(supnova_dict)
+        
+        # PHASE 3: DESTRUCTION (après supnovaDuration + supnovaActiveTime)
         else:
-            # SECOND HALF: ERASE THE PREVIOUS POSITION STORED IN THE DICTIONARY
-            if supnova_dict['triangle'] is not None:
+            self._drawSupnovaDestruction(supnova_dict)
 
-                for i in range (len(supnova_dict['triangle'])):
+    def _drawSupnovaExpansion(
+        self,
+        x: float,
+        y: float,
+        elapsedTime: float,
+        supnova_dict: Dict[str, Any]
+    ) -> None:
+        """PHASE 1: Expansion - Génère et affiche les triangles en spirale croissante"""
+        progress: float = elapsedTime / self.supnovaDuration
+        
+        # Générer les triangles UNE SEULE FOIS (à la première frame de cette phase)
+        if not supnova_dict['triangle']:
+            self._generateSupnovaTriangles(x, y, supnova_dict)
+        
+        # Afficher les triangles avec couleur d'expansion
+        for i in range(len(supnova_dict['triangle'])):
+            tri = supnova_dict['triangle'][i]
+            col = supnova_dict['color'][i]
+            
+            # Augmenter l'intensité pendant l'expansion
+            intensifiedColor = (
+                col[0] * progress,
+                col[1] * progress,
+                col[2] * progress
+            )
+            
+            tri.draw(self.screen, intensifiedColor)
 
-                    triErase = supnova_dict['triangle'][i]
-                    x = supnova_dict['spiralX'][i]
-                    y = supnova_dict['spiralY'][i]
+    def _generateSupnovaTriangles(
+        self,
+        x: float,
+        y: float,
+        supnova_dict: Dict[str, Any]
+    ) -> None:
+        numTriangles: int = 20  # Nombre de triangles à générer
+        
+        for _ in range(numTriangles):
+            randomR = int(random.uniform(100, 255))
+            randomG = int(random.uniform(50, 200))
+            randomB = int(random.uniform(150, 255))
+            
+            angle = random.uniform(0, 6.28)
+            
+            # Créer un triangle aléatoire
+            vec1 = Vector2(x, y)
+            vec2 = Vector2(x + random.uniform(2.5, 5), y + random.uniform(5, 10))
+            vec3 = Vector2(x + random.uniform(7.5, 15), y)
+            
+            tri = Triangle(vec1, vec2, vec3)
+            tri.rotate(Vector2(x, y), angle)
+            
+            supnova_dict['triangle'].append(tri)
+            supnova_dict['color'].append((randomR, randomG, randomB))
+            supnova_dict['spiralX'].append(x)
+            supnova_dict['spiralY'].append(y)
 
-                    
-                    triErase.draw(self.screen,(0,0,0))  
+    def _drawSupnovaActive(
+        self,
+        supnova_dict: Dict[str, Any]
+    ) -> None:
+        for i in range(len(supnova_dict['triangle'])):
+            tri = supnova_dict['triangle'][i]
+            col = supnova_dict['color'][i]
+            
+            # Afficher à couleur pleine (pas de changement d'intensité)
+            tri.draw(self.screen, col)
 
+    def _drawSupnovaDestruction(
+        self,
+        supnova_dict: Dict[str, Any]
+    ) -> None:
+        for i in range(len(supnova_dict['triangle'])):
+            tri = supnova_dict['triangle'][i]
+            
+            # Effacer en noir pour la phase 3
+            tri.draw(self.screen, (0, 0, 0))
 
     def destroyRandomStar(self) -> None:
         if len(self.stars) > 0:
@@ -151,9 +205,7 @@ class Game:
                 'x': x,
                 'y': y,
                 'startTime': time.time(),
-                'randomR': int(random.uniform(0, 255)),
-                'randomG': int(random.uniform(0, 255)),
-                'randomB': int(random.uniform(0, 255)),
+                'color': [],
                 'triangle': [],
                 'spiralX': [],
                 'spiralY': []
@@ -165,7 +217,7 @@ class Game:
         self.drawStars(self.nStars)
         pygame.mixer.music.load("C:/Users/rubat/IdeaProjects/T2D/data/music/midiplayer/brahms_lullaby.mid")
         
-        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2),0)
+        spaceShip = SpaceShip(Vector2(self.screenWidth/2 + 300, self.screenHeight/2), 0)
 
         pygame.mixer.music.play()
         
@@ -183,7 +235,7 @@ class Game:
                     noteTimestmp = self.Instr1Notes[nextNoteIdx].start
                     
                     if currentTime >= noteTimestmp:
-                        #self.screen.fill((100, 100, 100))
+                        # self.screen.fill((100, 100, 100))
                         self.destroyRandomStar()
                         nextNoteIdx += 1 
 
@@ -193,14 +245,11 @@ class Game:
                 elapsed: float = time.time() - supnova['startTime']
                 
                 # DRAW SUPERNOVA IF STILL ACTIVE
-                if elapsed < self.supnovaDuration:
+                if elapsed < self.supnovaDuration + self.supnovaActiveTime + self.supnovaDestructionTimeDuration:
                     self.drawSupnovaAtStage(
                         supnova['x'],
                         supnova['y'],
                         elapsed,
-                        supnova['randomR'],
-                        supnova['randomG'],
-                        supnova['randomB'],
                         supnova
                     )
                 else:
@@ -208,6 +257,7 @@ class Game:
                     supnova['triangle'].clear()
                     supnova['spiralX'].clear()
                     supnova['spiralY'].clear()
+                    supnova['color'].clear()
     
                     # REMOVE EXPIRED SUPERNOVA FROM ACTIVE LIST
                     self.supnovaActiveList.remove(supnova)
