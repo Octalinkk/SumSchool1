@@ -3,6 +3,7 @@ import random
 import time
 from Spaceship import SpaceShip
 from Planet import Planet
+from Star import Star
 from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
@@ -11,33 +12,7 @@ from Grammar import Grammar
 from Triangle import Triangle
 
 
-class Star:
-    def __init__(self, x: float, y: float, color: int):
-        self.x = x
-        self.y = y
-        self.color = color
-    
-    def draw(self, screen: pygame.Surface) -> None:
-        pygame.draw.polygon(
-            screen,
-            (self.color, self.color, self.color),
-            [(self.x + 1, self.y + 0),
-             (self.x + 2, self.y + 2),
-             (self.x + 0, self.y + 2)]
-        )
-    
-    def erase(self, screen: pygame.Surface) -> None:
-        pygame.draw.polygon(
-            screen,
-            (0, 0, 0),
-            [(self.x + 1, self.y + 0),
-             (self.x + 2, self.y + 2),
-             (self.x + 0, self.y + 2)]
-        )
-    
-    def move(self, screen_width: float, screen_height: float) -> None:
-        self.x = (self.x + 0.1) % screen_width
-        self.y = (self.y + 0.01) % screen_height
+
 
 
 class Game:
@@ -62,7 +37,7 @@ class Game:
         self.Instr1Notes = self.extract.getNotesForIntru(0)  
         self.Instr2Notes = self.extract.getNotesForIntru(1)  
 
-    def test_pygame_initialization(self) -> None:
+    def windownInit(self) -> None:
         # INITIALIZE PYGAME AND CREATE DISPLAY WINDOW
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
@@ -166,7 +141,7 @@ class Game:
 
     def onInit(self) -> None:
         # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
-        self.test_pygame_initialization()
+        self.windownInit()
         self.drawStars(self.nStars)
         pygame.mixer.music.load(self.midi_path)
 

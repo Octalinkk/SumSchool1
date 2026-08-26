@@ -16,7 +16,7 @@ class Grammar():
 
     
 
-    def generateSeed(self, path):
+    def generateSeed(self, path) -> int:
         data = MidiDataExtractor(path)
         seed = round((data.getNotesCount() * data.getMidiDuration() + data.getAvrgVelo() * data.getAvrgPitch()) * 10000)
         print(int(str(seed)[:8]))

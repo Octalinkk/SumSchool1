@@ -9,7 +9,7 @@ class Circle():
         self.details = details
         self.triangles = self.calcCircleOfTriangles()
         
-    def calcCircleOfTriangles(self):
+    def calcCircleOfTriangles(self) -> list[Triangle]:
     
         positionX = self.pos.x
         positionY = self.pos.y
