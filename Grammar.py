@@ -1,7 +1,6 @@
 from MidiDataExtractor import MidiDataExtractor
 from Spaceship import SpaceShip
 from pygame import Color
-import math
 import random
 from Palette import Palette
 

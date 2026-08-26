@@ -16,7 +16,7 @@ class Game:
     screenWidth: int = 1920
     screenHeight: int = 1080
     supnovaDuration: float = 0.3
-    midi_path:str = "test1.mid"
+    midi_path:str = "test2.mid"
     grammar = Grammar(midi_path)
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
@@ -170,7 +170,7 @@ class Game:
         pygame.mixer.music.load(self.midi_path)
 
         
-        planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100)
+        planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100, self.grammar.seed)
         spaceShip = SpaceShip(Vector2(planet.origin.x + planet.radius * 2, planet.origin.y), planet.origin)
         self.grammar.genShip(spaceShip)
         palette = self.grammar.genPalette(5) # Ship has 5 parts
