@@ -25,5 +25,5 @@ class Star:
         )
     
     def move(self, screen_width: float, screen_height: float) -> None:
-        self.x = (self.x + 0.1) % screen_width
-        self.y = (self.y + 0.01) % screen_height
+        self.x = (self.x + 1.1) % screen_width
+        self.y = (self.y + 1.01) % screen_height

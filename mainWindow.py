@@ -3,6 +3,7 @@ import random
 import time
 from Spaceship import SpaceShip
 from Planet import Planet
+from Ring import Ring
 from Star import Star
 from pygame import Vector2
 from typing import List, Dict, Any, Optional
@@ -20,8 +21,8 @@ class Game:
     nStars: int = 1000
     screenWidth: int = 1920
     screenHeight: int = 1080
-    supnovaDuration: float = 0.3
-    midi_path:str = "test2.mid"
+    supnovaDuration: float = 10
+    midi_path:str = "test3.mid"
     grammar = Grammar(midi_path)
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
@@ -147,9 +148,12 @@ class Game:
 
         
         planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100, self.grammar.seed)
+        ring = Ring(planet)
         spaceShip = SpaceShip(Vector2(planet.origin.x + planet.radius * 2, planet.origin.y), planet.origin)
         self.grammar.genShip(spaceShip)
-        palette = self.grammar.genPalette(5) # Ship has 5 parts
+        pltShip = self.grammar.genPalette(5) # Ship has 5 parts
+        pltUpperRing = self.grammar.genPalette(360) # Ship has 5 parts
+        pltLowerRing = self.grammar.genPalette(360) # Ship has 5 parts
 
         pygame.mixer.music.play()
         
@@ -212,10 +216,12 @@ class Game:
                     self.supnovaActiveList.remove(supnova)
 
             spaceShip.eraseDrawing(self.screen)
+            ring.drawLowerRing(self.screen, pltLowerRing)
             spaceShip.rotateShip(0.001)
-            spaceShip.drawShip(self.screen, palette)
+            spaceShip.drawShip(self.screen, pltShip)
             spaceShip.drawBeam(self.screen)
             planet.drawPlanet(self.screen)
+            ring.drawUpperRing(self.screen, pltUpperRing)
             
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
