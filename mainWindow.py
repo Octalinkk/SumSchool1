@@ -11,8 +11,8 @@ from Triangle import Triangle
 
 class Star:
 
-    xMove = 0.1
-    yMove = 0.01
+    xMove = 0.5
+    yMove = 0.15
 
     def __init__(self, x: float, y: float, color: int):
         self.x = x
@@ -47,9 +47,11 @@ class Game:
     nStars: int = 1000
     screenWidth: int = 1920
     screenHeight: int = 1080
-    supnovaDuration: float = 0.5
-    supnovaActiveTime: float = 10
-    supnovaDestructionTimeDuration: float = 0.5
+    supnovaDuration: float = 0.1
+    supnovaActiveTime: float = 1
+    supnovaConvergenceDuration: float = 1.9
+    supnovaFadeDuration: float = 0.2
+    supnovaDestructionTimeDuration: float = 0.1
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
     stars: List[Star] = []
@@ -94,17 +96,26 @@ class Game:
         elapsedTime: float,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        """Dispatch vers la bonne phase en fonction du temps écoulé"""
         
-        # PHASE 1: EXPANSION (0 à supnovaDuration)
+        # PHASE 1: EXPANSION
         if elapsedTime < self.supnovaDuration:
-            self._drawSupnovaExpansion(x, y, elapsedTime, supnova_dict)
+            self._drawSupnovaExpansion(x, y, elapsedTime, supnova_dict, self.supnovaDuration)
         
-        # PHASE 2: ACTIVE (supnovaDuration à supnovaDuration + supnovaActiveTime)
+        # PHASE 2: ACTIVE
         elif elapsedTime < self.supnovaDuration + self.supnovaActiveTime:
             self._drawSupnovaActive(supnova_dict)
         
-        # PHASE 3: DESTRUCTION (après supnovaDuration + supnovaActiveTime)
+        # PHASE 3: CONVERGENCE
+        elif elapsedTime < self.supnovaDuration + self.supnovaActiveTime + self.supnovaConvergenceDuration:
+            convergenceElapsed: float = elapsedTime - (self.supnovaDuration + self.supnovaActiveTime)
+            self._drawSupnovaConvergence(x, y, convergenceElapsed, supnova_dict, self.supnovaConvergenceDuration)
+        
+        # PHASE 4: FADE TO BLACK
+        elif elapsedTime < self.supnovaDuration + self.supnovaActiveTime + self.supnovaConvergenceDuration + self.supnovaFadeDuration:
+            fadeElapsed: float = elapsedTime - (self.supnovaDuration + self.supnovaActiveTime + self.supnovaConvergenceDuration)
+            self._drawSupnovaFadeToBlack(x, y, fadeElapsed, supnova_dict, self.supnovaFadeDuration)
+        
+        # PHASE 5: DESTRUCTION
         else:
             self._drawSupnovaDestruction(supnova_dict)
 
@@ -113,12 +124,12 @@ class Game:
         x: float,
         y: float,
         elapsedTime: float,
-        supnova_dict: Dict[str, Any]
+        supnova_dict: Dict[str, Any],
+        duration: float
     ) -> None:
-        """PHASE 1: Expansion - Génère et affiche les triangles en spirale croissante"""
-        progress: float = elapsedTime / self.supnovaDuration
+        progress: float = elapsedTime / duration
         
-        # Générer les triangles UNE SEULE FOIS (à la première frame de cette phase)
+        # Générer les triangles UNE SEULE FOIS
         if not supnova_dict['triangle']:
             self._generateSupnovaTriangles(x, y, supnova_dict)
         
@@ -142,27 +153,32 @@ class Game:
         y: float,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        numTriangles: int = 20  # Nombre de triangles à générer
+        numTriangles: int = int(random.uniform(30, 60))  # Nombre de triangles à générer
         
         for _ in range(numTriangles):
-            randomR = int(random.uniform(100, 255))
-            randomG = int(random.uniform(50, 200))
+            randomR = int(random.uniform(50, 80))
+            randomG = int(random.uniform(50,80))
             randomB = int(random.uniform(150, 255))
             
             angle = random.uniform(0, 6.28)
             
-            # Créer un triangle aléatoire
-            vec1 = Vector2(x, y)
-            vec2 = Vector2(x + random.uniform(2.5, 5), y + random.uniform(5, 10))
-            vec3 = Vector2(x + random.uniform(7.5, 15), y)
+            # PLACER LES TRIANGLES PLUS LOIN DU CENTRE
+            radius: float = random.uniform(0, 5)
+            offsetX: float = radius * math.cos(angle)
+            offsetY: float = radius * math.sin(angle)
+            
+            # Créer un triangle aléatoire à distance du centre
+            vec1 = Vector2(x + offsetX, y + offsetY)
+            vec2 = Vector2(x + offsetX + random.uniform(5, 10), y + offsetY + random.uniform(5, 10))
+            vec3 = Vector2(x + offsetX + random.uniform(10, 20), y + offsetY)
             
             tri = Triangle(vec1, vec2, vec3)
             tri.rotate(Vector2(x, y), angle)
             
             supnova_dict['triangle'].append(tri)
             supnova_dict['color'].append((randomR, randomG, randomB))
-            supnova_dict['spiralX'].append(x)
-            supnova_dict['spiralY'].append(y)
+            supnova_dict['spiralX'].append(x + offsetX)
+            supnova_dict['spiralY'].append(y + offsetY)
 
     def _drawSupnovaActive(
         self,
@@ -172,8 +188,94 @@ class Game:
             tri = supnova_dict['triangle'][i]
             col = supnova_dict['color'][i]
             
-            # Afficher à couleur pleine (pas de changement d'intensité)
             tri.draw(self.screen, col)
+
+    def _drawSupnovaConvergence(
+        self,
+        x: float,
+        y: float,
+        convergenceElapsed: float,
+        supnova_dict: Dict[str, Any],
+        duration: float
+    ) -> None:
+        progress: float = convergenceElapsed / duration
+        
+        # VITESSE DE DÉPLACEMENT: Réduis ce facteur pour ralentir (0.5 = 50% plus lent, 0.25 = 75% plus lent)
+        speedFactor: float = 0.01
+        adjustedProgress: float = progress * speedFactor
+        
+        for i in range(len(supnova_dict['triangle'])):
+            tri = supnova_dict['triangle'][i]
+            
+            # Récupérer la position initiale
+            initialX: float = supnova_dict['spiralX'][i]
+            initialY: float = supnova_dict['spiralY'][i]
+            
+            # EFFACER: Dessiner en noir à la position courante
+            tri.draw(self.screen, (0, 0, 0))
+            
+            # Calculer la position interpolée vers le centre avec vitesse réduite
+            currentX: float = initialX + (x - initialX) * adjustedProgress
+            currentY: float = initialY + (y - initialY) * adjustedProgress
+            
+            # Déplacer le triangle
+            offsetX: float = currentX - initialX
+            offsetY: float = currentY - initialY
+            tri.move(Vector2(offsetX, offsetY))
+            
+            # Interpoler la couleur vers le blanc
+            originalColor = supnova_dict['color'][i]
+            convergenceColor = (
+                originalColor[0] + (255 - originalColor[0]) * progress,
+                originalColor[1] + (255 - originalColor[1]) * progress,
+                originalColor[2] + (255 - originalColor[2]) * progress
+            )
+            
+            # REDESSINER: Afficher le triangle à la nouvelle position
+            tri.draw(self.screen, convergenceColor)
+
+    def _drawSupnovaFadeToBlack(
+        self,
+        x: float,
+        y: float,
+        fadeElapsed: float,
+        supnova_dict: Dict[str, Any],
+        duration: float
+    ) -> None:
+        progress: float = fadeElapsed / duration
+        
+        # VITESSE DE DÉPLACEMENT: Même facteur que la convergence pour la cohérence
+        speedFactor: float = 0.5
+        adjustedProgress: float = progress * speedFactor
+        
+        for i in range(len(supnova_dict['triangle'])):
+            tri = supnova_dict['triangle'][i]
+            
+            # Récupérer la position initiale
+            initialX: float = supnova_dict['spiralX'][i]
+            initialY: float = supnova_dict['spiralY'][i]
+            
+            # EFFACER: Dessiner en noir à la position courante
+            tri.draw(self.screen, (0, 0, 0))
+            
+            # CONTINUE IN DIRECTION OF THE CENTER WITH THE FADE
+            currentX: float = initialX + (x - initialX) * (1.0 + adjustedProgress)
+            currentY: float = initialY + (y - initialY) * (1.0 + adjustedProgress)
+            
+            # MOVE TRIANGLE
+            offsetX: float = currentX - initialX
+            offsetY: float = currentY - initialY
+            tri.move(Vector2(offsetX, offsetY))
+            
+            # MAKE COLOR FOR THE FADE
+            fadeColor = (
+                int(255 * (1 - progress)),
+                int(255 * (1 - progress)),
+                int(255 * (1 - progress))
+            )
+            
+            # REDRAW AND MAKE THE FADE
+            tri.draw(self.screen, fadeColor)
 
     def _drawSupnovaDestruction(
         self,
@@ -181,8 +283,6 @@ class Game:
     ) -> None:
         for i in range(len(supnova_dict['triangle'])):
             tri = supnova_dict['triangle'][i]
-            
-            # Effacer en noir pour la phase 3
             tri.draw(self.screen, (0, 0, 0))
 
     def destroyRandomStar(self) -> None:
@@ -232,20 +332,26 @@ class Game:
                 
                 # Check timing with next note
                 if nextNoteIdx < len(self.Instr1Notes):
-                    noteTimestmp = self.Instr1Notes[nextNoteIdx].start
+                    noteTimestmp = self.Instr1Notes[nextNoteIdx].start - 3
                     
                     if currentTime >= noteTimestmp:
-                        # self.screen.fill((100, 100, 100))
                         self.destroyRandomStar()
                         nextNoteIdx += 1 
 
             self.moveAllStars()
 
-            for supnova in self.supnovaActiveList[:]:  # [:] CREATES A COPY TO SAFELY ITERATE WHILE REMOVING
+            for supnova in self.supnovaActiveList[:]:
                 elapsed: float = time.time() - supnova['startTime']
+                totalDuration: float = (
+                    self.supnovaDuration + 
+                    self.supnovaActiveTime + 
+                    self.supnovaConvergenceDuration + 
+                    self.supnovaFadeDuration + 
+                    self.supnovaDestructionTimeDuration
+                )
                 
                 # DRAW SUPERNOVA IF STILL ACTIVE
-                if elapsed < self.supnovaDuration + self.supnovaActiveTime + self.supnovaDestructionTimeDuration:
+                if elapsed < totalDuration:
                     self.drawSupnovaAtStage(
                         supnova['x'],
                         supnova['y'],
@@ -253,7 +359,7 @@ class Game:
                         supnova
                     )
                 else:
-                    # CLEAN UP MEMORY: Vider les listes de triangles
+                    # CLEAN UP MEMORY
                     supnova['triangle'].clear()
                     supnova['spiralX'].clear()
                     supnova['spiralY'].clear()
