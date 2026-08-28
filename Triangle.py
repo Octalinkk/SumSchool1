@@ -27,3 +27,9 @@ class Triangle():
             target.x + ((self.p3.x - target.x) * math.cos(angleRad) - (self.p3.y - target.y) * math.sin(angleRad)), 
             target.y + ((self.p3.x - target.x) * math.sin(angleRad) + (self.p3.y - target.y) * math.cos(angleRad))
         )
+
+    def move(self, offset: Vector2) -> None:
+        """Déplace le triangle en translatant tous les sommets"""
+        self.p1 += offset
+        self.p2 += offset
+        self.p3 += offset
