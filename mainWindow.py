@@ -10,6 +10,7 @@ from supTriangle import supTriangle
 from supSquare import supSquare
 from supCircle import supCircle
 from star import Star
+from asteroid import Asteroid
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
@@ -26,6 +27,7 @@ class Game:
     stars: List[Star] = []
     startTime: float = time.time()
     supnovaActiveList: List[Dict[str, Any]] = []
+    asteroids: List[Dict[str, Any]] = []
 
 
     def __init__(self):
@@ -57,6 +59,29 @@ class Game:
             star.erase(self.screen)
             star.move(self.screenWidth, self.screenHeight)
             star.drawSmallTriangle(self.screen)
+
+    def generateRandomAsteroid(self) -> None:
+        randomX: float = random.uniform(0, self.screenWidth)
+        randomY: float = random.uniform(0, self.screenHeight)
+        radius: float = random.uniform(10, 30)
+        
+        # Vitesse aléatoire
+        vx: float = random.uniform(-3, 3)
+        vy: float = random.uniform(-3, 3)
+        
+        # Vitesse de rotation
+        rotationSpeed: float = random.uniform(-0.05, 0.05)
+        
+        self.asteroids.append({
+            'asteroid': Asteroid(randomX, randomY, radius),
+            'x': randomX,
+            'y': randomY,
+            'radius': radius,
+            'vx': vx,
+            'vy': vy,
+            'rotation': 0,
+            'rotationSpeed': rotationSpeed
+        })
 
     def drawSupnovaAtStage(
         self,
@@ -262,6 +287,10 @@ class Game:
 
         pygame.mixer.music.play()
         
+        # Générer 5 astéroïdes au démarrage
+        for _ in range(5):
+            self.generateRandomAsteroid()
+        
         # Index to check next note
         nextNoteIdx = 0
         
@@ -280,6 +309,26 @@ class Game:
                         nextNoteIdx += 1 
 
             self.moveAllStars()
+            
+            # Dessiner et déplacer les astéroïdes
+            for asteroid_dict in self.asteroids[:]:
+                ast = asteroid_dict['asteroid']
+                
+                # Effacer l'ancienne position
+                ast.erase(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], asteroid_dict['rotation'])
+                
+                # Mettre à jour position
+                asteroid_dict['x'] += asteroid_dict['vx']
+                asteroid_dict['y'] += asteroid_dict['vy']
+                asteroid_dict['rotation'] += asteroid_dict['rotationSpeed']
+                
+                # Gérer wraparound aux bords de l'écran
+                asteroid_dict['x'] = asteroid_dict['x'] % self.screenWidth
+                asteroid_dict['y'] = asteroid_dict['y'] % self.screenHeight
+                
+                # Dessiner à la nouvelle position
+                
+                ast.draw(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], (100, 100, 100), asteroid_dict['rotation'])
 
             for supnova in self.supnovaActiveList[:]:
                 elapsed: float = time.time() - supnova['startTime']
@@ -326,4 +375,4 @@ class Game:
 # ENTRY POINT: CREATE GAME INSTANCE AND START
 if __name__ == "__main__":
     game: Game = Game()
-    game.onInit()
+    game.onInit() 
