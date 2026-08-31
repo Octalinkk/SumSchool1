@@ -20,7 +20,7 @@ class Ring():
         rng = random.Random(self.seed)
         rngRadius = rng.randint(10, self.radius)
         points = []
-        for angle in range(360):
+        for angle in range(0, 360, 5):
             x = self.origin.x + rngRadius * math.cos(math.radians(angle))
             y = self.origin.y + self.radius * math.sin(math.radians(angle))
             points.append(Vector2(x, y)) 
@@ -47,9 +47,9 @@ class Ring():
 
     def drawUpperRing(self, screen, palette:Palette):
         for point in self.upperPoints:
-            EquiTriangle(point, 5, 0, palette.getPalette()[self.upperPoints.index(point)]).draw(screen)
+            EquiTriangle(point, 10, 0, palette.getPalette()[self.upperPoints.index(point)]).draw(screen)
 
     def drawLowerRing(self, screen, palette:Palette):
             for point in self.lowerPoints:
-                EquiTriangle(point, 5, 0, palette.getPalette()[self.lowerPoints.index(point)]).draw(screen)
+                EquiTriangle(point, 10, 0, palette.getPalette()[self.lowerPoints.index(point)]).draw(screen)
         

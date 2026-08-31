@@ -15,8 +15,8 @@ from Triangle import Triangle
 
 class Star:
 
-    xMove = 0.5
-    yMove = 0.15
+    xMove = 1
+    yMove = 0.30
 
     def __init__(self, x: float, y: float, color: int):
         self.x = x
@@ -48,7 +48,7 @@ class Star:
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
-    nStars: int = 1000
+    nStars: int = 500
     screenWidth: int = 1920
     screenHeight: int = 1080
     midi_path:str = "test3.mid"
@@ -56,7 +56,7 @@ class Game:
     supnovaDuration: float = 0.1
     supnovaActiveTime: float = 1
     supnovaConvergenceDuration: float = 1.9
-    supnovaFadeDuration: float = 0.2
+    supnovaFadeDuration: float = 1.5
     supnovaDestructionTimeDuration: float = 0.1
     
     # CLASS ATTRIBUTES FOR STORING STAR AND SUPERNOVA DATA 
@@ -160,7 +160,7 @@ class Game:
         y: float,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        numTriangles: int = int(random.uniform(30, 60))  # Nombre de triangles à générer
+        numTriangles: int = int(random.uniform(30, 30))  # Nombre de triangles à générer
         
         for _ in range(numTriangles):
             randomR = int(random.uniform(50, 80))
@@ -325,7 +325,7 @@ class Game:
         pygame.mixer.music.load(self.midi_path)
 
         
-        planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100, self.grammar.seed)
+        planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100, self.grammar.seed, 2)
         ring = Ring(planet)
         spaceShip = SpaceShip(Vector2(planet.origin.x + planet.radius * 2, planet.origin.y), planet.origin)
         self.grammar.genShip(spaceShip)
