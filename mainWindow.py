@@ -6,41 +6,10 @@ from pygame import Vector2
 from typing import List, Dict, Any, Optional
 import math
 from SoundExtract import SoundExtract
-from Triangle import Triangle
-
-
-class Star:
-
-    xMove = 0.5
-    yMove = 0.15
-
-    def __init__(self, x: float, y: float, color: int):
-        self.x = x
-        self.y = y
-        self.color = color
-    
-    def drawSmallTriangle(self, screen: pygame.Surface) -> None:
-        pygame.draw.polygon(
-            screen,
-            (self.color, self.color, self.color),
-            [(self.x + 1, self.y + 0),
-             (self.x + 2, self.y + 2),
-             (self.x + 0, self.y + 2)]
-        )
-    
-    def erase(self, screen: pygame.Surface) -> None:
-        pygame.draw.polygon(
-            screen,
-            (0, 0, 0),
-            [(self.x + 1, self.y + 0),
-             (self.x + 2, self.y + 2),
-             (self.x + 0, self.y + 2)]
-        )
-    
-    def move(self, screen_width: float, screen_height: float) -> None:
-        self.x = (self.x + self.xMove) % screen_width
-        self.y = (self.y + self.yMove) % screen_height
-
+from supTriangle import supTriangle
+from supSquare import supSquare
+from supCircle import supCircle
+from star import Star
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
@@ -129,53 +98,41 @@ class Game:
     ) -> None:
         progress: float = elapsedTime / duration
         
-        # Générer les triangles UNE SEULE FOIS
-        if not supnova_dict['triangle']:
+        if not supnova_dict['shapes']:
             self._generateSupnovaTriangles(x, y, supnova_dict)
         
-        # Afficher les triangles avec couleur d'expansion
-        for i in range(len(supnova_dict['triangle'])):
-            tri = supnova_dict['triangle'][i]
+        for i in range(len(supnova_dict['shapes'])):
+            shape = supnova_dict['shapes'][i]
             col = supnova_dict['color'][i]
             
-            # Augmenter l'intensité pendant l'expansion
             intensifiedColor = (
-                col[0] * progress,
-                col[1] * progress,
-                col[2] * progress
+                int(col[0] * progress),
+                int(col[1] * progress),
+                int(col[2] * progress)
             )
             
-            tri.draw(self.screen, intensifiedColor)
+            shape.draw(self.screen, intensifiedColor, 0)
 
-    def _generateSupnovaTriangles(
-        self,
-        x: float,
-        y: float,
-        supnova_dict: Dict[str, Any]
-    ) -> None:
-        numTriangles: int = int(random.uniform(30, 60))  # Nombre de triangles à générer
+    def _generateSupnovaTriangles(self,x: float,y: float,supnova_dict: Dict[str, Any]) -> None:
+        numTriangles: int = int(random.uniform(30, 60))
+        shapeClasses = [supTriangle, supSquare, supCircle]  # Liste des formes disponibles
         
         for _ in range(numTriangles):
             randomR = int(random.uniform(50, 80))
-            randomG = int(random.uniform(50,80))
+            randomG = int(random.uniform(50, 80))
             randomB = int(random.uniform(150, 255))
             
             angle = random.uniform(0, 6.28)
             
-            # PLACER LES TRIANGLES PLUS LOIN DU CENTRE
             radius: float = random.uniform(0, 5)
             offsetX: float = radius * math.cos(angle)
             offsetY: float = radius * math.sin(angle)
             
-            # Créer un triangle aléatoire à distance du centre
-            vec1 = Vector2(x + offsetX, y + offsetY)
-            vec2 = Vector2(x + offsetX + random.uniform(5, 10), y + offsetY + random.uniform(5, 10))
-            vec3 = Vector2(x + offsetX + random.uniform(10, 20), y + offsetY)
+            # Créer une forme aléatoire
+            randomShapeClass = random.choice(shapeClasses)
+            shape = randomShapeClass(x + offsetX, y + offsetY, (randomR, randomG, randomB))
             
-            tri = Triangle(vec1, vec2, vec3)
-            tri.rotate(Vector2(x, y), angle)
-            
-            supnova_dict['triangle'].append(tri)
+            supnova_dict['shapes'].append(shape)
             supnova_dict['color'].append((randomR, randomG, randomB))
             supnova_dict['spiralX'].append(x + offsetX)
             supnova_dict['spiralY'].append(y + offsetY)
@@ -184,11 +141,11 @@ class Game:
         self,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        for i in range(len(supnova_dict['triangle'])):
-            tri = supnova_dict['triangle'][i]
+        for i in range(len(supnova_dict['shapes'])):
+            shape = supnova_dict['shapes'][i]
             col = supnova_dict['color'][i]
             
-            tri.draw(self.screen, col)
+            shape.draw(self.screen, col, 0)
 
     def _drawSupnovaConvergence(
         self,
@@ -199,40 +156,32 @@ class Game:
         duration: float
     ) -> None:
         progress: float = convergenceElapsed / duration
-        
-        # VITESSE DE DÉPLACEMENT: Réduis ce facteur pour ralentir (0.5 = 50% plus lent, 0.25 = 75% plus lent)
         speedFactor: float = 0.01
         adjustedProgress: float = progress * speedFactor
         
-        for i in range(len(supnova_dict['triangle'])):
-            tri = supnova_dict['triangle'][i]
+        for i in range(len(supnova_dict['shapes'])):
+            shape = supnova_dict['shapes'][i]
             
-            # Récupérer la position initiale
             initialX: float = supnova_dict['spiralX'][i]
             initialY: float = supnova_dict['spiralY'][i]
             
-            # EFFACER: Dessiner en noir à la position courante
-            tri.draw(self.screen, (0, 0, 0))
+            shape.erase(self.screen, 0)
             
-            # Calculer la position interpolée vers le centre avec vitesse réduite
             currentX: float = initialX + (x - initialX) * adjustedProgress
             currentY: float = initialY + (y - initialY) * adjustedProgress
             
-            # Déplacer le triangle
             offsetX: float = currentX - initialX
             offsetY: float = currentY - initialY
-            tri.move(Vector2(offsetX, offsetY))
+            shape.move(Vector2(offsetX, offsetY))
             
-            # Interpoler la couleur vers le blanc
             originalColor = supnova_dict['color'][i]
             convergenceColor = (
-                originalColor[0] + (255 - originalColor[0]) * progress,
-                originalColor[1] + (255 - originalColor[1]) * progress,
-                originalColor[2] + (255 - originalColor[2]) * progress
+                int(originalColor[0] + (255 - originalColor[0]) * progress),
+                int(originalColor[1] + (255 - originalColor[1]) * progress),
+                int(originalColor[2] + (255 - originalColor[2]) * progress)
             )
             
-            # REDESSINER: Afficher le triangle à la nouvelle position
-            tri.draw(self.screen, convergenceColor)
+            shape.draw(self.screen, convergenceColor, 0)
 
     def _drawSupnovaFadeToBlack(
         self,
@@ -243,70 +192,62 @@ class Game:
         duration: float
     ) -> None:
         progress: float = fadeElapsed / duration
-        
-        # VITESSE DE DÉPLACEMENT: Même facteur que la convergence pour la cohérence
         speedFactor: float = 0.5
         adjustedProgress: float = progress * speedFactor
         
-        for i in range(len(supnova_dict['triangle'])):
-            tri = supnova_dict['triangle'][i]
+        for i in range(len(supnova_dict['shapes'])):
+            shape = supnova_dict['shapes'][i]
             
-            # Récupérer la position initiale
             initialX: float = supnova_dict['spiralX'][i]
             initialY: float = supnova_dict['spiralY'][i]
             
-            # EFFACER: Dessiner en noir à la position courante
-            tri.draw(self.screen, (0, 0, 0))
+            shape.erase(self.screen, 0)
             
-            # CONTINUE IN DIRECTION OF THE CENTER WITH THE FADE
             currentX: float = initialX + (x - initialX) * (1.0 + adjustedProgress)
             currentY: float = initialY + (y - initialY) * (1.0 + adjustedProgress)
             
-            # MOVE TRIANGLE
             offsetX: float = currentX - initialX
             offsetY: float = currentY - initialY
-            tri.move(Vector2(offsetX, offsetY))
+            shape.move(Vector2(offsetX, offsetY))
             
-            # MAKE COLOR FOR THE FADE
             fadeColor = (
                 int(255 * (1 - progress)),
                 int(255 * (1 - progress)),
                 int(255 * (1 - progress))
             )
             
-            # REDRAW AND MAKE THE FADE
-            tri.draw(self.screen, fadeColor)
+            shape.draw(self.screen, fadeColor, 0)
 
     def _drawSupnovaDestruction(
         self,
         supnova_dict: Dict[str, Any]
     ) -> None:
-        for i in range(len(supnova_dict['triangle'])):
-            tri = supnova_dict['triangle'][i]
-            tri.draw(self.screen, (0, 0, 0))
+        for i in range(len(supnova_dict['shapes'])):
+            shape = supnova_dict['shapes'][i]
+            shape.erase(self.screen, 0)
 
     def destroyRandomStar(self) -> None:
         if len(self.stars) > 0:
-            # PICK A RANDOM STAR
             randomIdx: int = int(random.uniform(0, len(self.stars)))
             star = self.stars[randomIdx]
             
             x: float = star.x
             y: float = star.y
             
-            # ERASE THE STAR FROM SCREEN
-            star.erase(self.screen)
+            # Vérifier qu'on est assez loin des bords
+            margin: float = 20  # Marge de sécurité
+            if x < margin or x > self.screenWidth - margin or y < margin or y > self.screenHeight - margin:
+                return  # Ne pas créer de supernova si trop près du bord
             
-            # REMOVE STAR FROM LIST
+            star.erase(self.screen)
             self.stars.pop(randomIdx)
             
-            # CREATE NEW SUPERNOVA ENTRY
             self.supnovaActiveList.append({
                 'x': x,
                 'y': y,
                 'startTime': time.time(),
                 'color': [],
-                'triangle': [],
+                'shapes': [],
                 'spiralX': [],
                 'spiralY': []
             })
@@ -360,7 +301,7 @@ class Game:
                     )
                 else:
                     # CLEAN UP MEMORY
-                    supnova['triangle'].clear()
+                    supnova['shapes'].clear()
                     supnova['spiralX'].clear()
                     supnova['spiralY'].clear()
                     supnova['color'].clear()
