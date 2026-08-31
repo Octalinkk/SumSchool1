@@ -11,6 +11,7 @@ import math
 from MidiDataExtractor import MidiDataExtractor
 from Grammar import Grammar
 from Triangle import Triangle
+from AudioConverter import audioToMidi
 
 
 class Star:
@@ -48,10 +49,13 @@ class Star:
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
+    defPath: str = "./Song/PinkPanther_Both.mp3"
+
+    midi_path:str = defPath.replace(".mp3", ".mid")
+    audioToMidi(defPath, midi_path) #Convert audio to midi
     nStars: int = 500
     screenWidth: int = 1920
     screenHeight: int = 1080
-    midi_path:str = "test3.mid"
     grammar = Grammar(midi_path)
     supnovaDuration: float = 0.1
     supnovaActiveTime: float = 1
@@ -322,7 +326,7 @@ class Game:
         # MAIN GAME LOOP - INITIALIZE AND RUN THE GAME
         self.windownInit()
         self.drawStars(self.nStars)
-        pygame.mixer.music.load(self.midi_path)
+        pygame.mixer.music.load(self.defPath)
 
         
         planet = Planet(Vector2(self.screenWidth/2, self.screenHeight/2), 100, self.grammar.seed, 2)

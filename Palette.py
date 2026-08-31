@@ -30,9 +30,9 @@ class Palette():
         if (self.accent == "dark"):
             base.r -= grad
         if (self.accent == "normal"):            
-            base.r -= grad/2
-            base.g = grad/2
-            base.b = grad/2
+            base.r -= int(grad/2)
+            base.g = int(grad/2)
+            base.b = int(grad/2)
         return base
     
     def genGreenColor(self, grad):
@@ -43,9 +43,9 @@ class Palette():
         if (self.accent == "dark"):
             base.g -= grad
         if (self.accent == "normal"):            
-            base.r = grad/2
-            base.g -= grad/2
-            base.b = grad/2
+            base.r = int(grad/2)
+            base.g -= int(grad/2)
+            base.b = int(grad/2)
         return base
     
     def genBlueColor(self, grad):
@@ -56,9 +56,9 @@ class Palette():
         if (self.accent == "dark"):
             base.b -= grad
         if (self.accent == "normal"):            
-            base.r = grad/2
-            base.g = grad/2
-            base.b -= grad/2
+            base.r = int(grad/2)
+            base.g = int(grad/2)
+            base.b -= int(grad/2)
         return base
         
         
