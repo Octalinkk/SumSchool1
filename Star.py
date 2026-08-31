@@ -1,12 +1,17 @@
 import pygame
 
+
 class Star:
+
+    xMove = 1
+    yMove = 0.30
+
     def __init__(self, x: float, y: float, color: int):
         self.x = x
         self.y = y
         self.color = color
-    
-    def draw(self, screen: pygame.Surface) -> None:
+
+    def drawSmallTriangle(self, screen: pygame.Surface) -> None:
         pygame.draw.polygon(
             screen,
             (self.color, self.color, self.color),
@@ -14,7 +19,7 @@ class Star:
              (self.x + 2, self.y + 2),
              (self.x + 0, self.y + 2)]
         )
-    
+
     def erase(self, screen: pygame.Surface) -> None:
         pygame.draw.polygon(
             screen,
@@ -23,7 +28,7 @@ class Star:
              (self.x + 2, self.y + 2),
              (self.x + 0, self.y + 2)]
         )
-    
+
     def move(self, screen_width: float, screen_height: float) -> None:
-        self.x = (self.x + 1.1) % screen_width
-        self.y = (self.y + 1.01) % screen_height
+        self.x = (self.x + self.xMove) % screen_width
+        self.y = (self.y + self.yMove) % screen_height
