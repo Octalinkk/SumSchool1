@@ -3,12 +3,18 @@ from Spaceship import SpaceShip
 from Planet import Planet
 from Ring import Ring
 from pygame import Vector2
-from typing import Optional
 from MidiDataExtractor import MidiDataExtractor
 from Grammar import Grammar
 from AudioConverter import audioToMidi
 from StarManager import StarManager
 
+from typing import List, Dict, Any, Optional
+import math
+from supTriangle import supTriangle
+from supSquare import supSquare
+from supCircle import supCircle
+from star import Star
+from asteroid import Asteroid
 
 class Game:
     # CLASS CONSTANTS FOR GAME CONFIGURATION
@@ -20,6 +26,8 @@ class Game:
     screenWidth: int = 1920
     screenHeight: int = 1080
     grammar = Grammar(midi_path)
+    
+    asteroids: List[Dict[str, Any]] = []
 
     def __init__(self):
         self.screen: Optional[pygame.Surface] = None
@@ -32,6 +40,29 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         pygame.display.set_caption("Animation")
+
+    def generateRandomAsteroid(self) -> None:
+            randomX: float = random.uniform(0, self.screenWidth)
+            randomY: float = random.uniform(0, self.screenHeight)
+            radius: float = random.uniform(10, 30)
+            
+            # Vitesse aléatoire
+            vx: float = random.uniform(-3, 3)
+            vy: float = random.uniform(-3, 3)
+            
+            # Vitesse de rotation
+            rotationSpeed: float = random.uniform(-0.05, 0.05)
+            
+            self.asteroids.append({
+                'asteroid': Asteroid(randomX, randomY, radius),
+                'x': randomX,
+                'y': randomY,
+                'radius': radius,
+                'vx': vx,
+                'vy': vy,
+                'rotation': 0,
+                'rotationSpeed': rotationSpeed
+            })
         
 
     def onInit(self) -> None:
@@ -52,6 +83,12 @@ class Game:
         nextNoteSeq1Idx = 0
         nextNoteSeq2Idx = 0
 
+        
+        # Générer 5 astéroïdes au démarrage
+        for _ in range(5):
+            self.generateRandomAsteroid()
+        
+        
         while self.running:
             songPos = pygame.mixer.music.get_pos()
             if songPos != -1:
@@ -80,6 +117,27 @@ class Game:
             self.starManager.moveAllStars(self.screen)
             self.starManager.updateAndDrawSupernovas(self.screen)
 
+            # Dessiner et déplacer les astéroïdes
+            for asteroid_dict in self.asteroids[:]:
+                ast = asteroid_dict['asteroid']
+                
+                # Effacer l'ancienne position
+                ast.erase(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], asteroid_dict['rotation'])
+                
+                # Mettre à jour position
+                asteroid_dict['x'] += asteroid_dict['vx']
+                asteroid_dict['y'] += asteroid_dict['vy']
+                asteroid_dict['rotation'] += asteroid_dict['rotationSpeed']
+                
+                # Gérer wraparound aux bords de l'écran
+                asteroid_dict['x'] = asteroid_dict['x'] % self.screenWidth
+                asteroid_dict['y'] = asteroid_dict['y'] % self.screenHeight
+                
+                # Dessiner à la nouvelle position
+                
+                ast.draw(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], (100, 100, 100), asteroid_dict['rotation'])
+
+
             spaceShip.eraseDrawing(self.screen)
             ring.drawLowerRing(self.screen, pltLowerRing)
             spaceShip.rotateShip(0.001)
@@ -99,4 +157,4 @@ class Game:
 
 if __name__ == "__main__":
     game: Game = Game()
-    game.onInit()
+    game.onInit() 
