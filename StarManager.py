@@ -42,10 +42,18 @@ class StarManager:
         randomIdx: int = int(random.uniform(0, len(self.stars)))
         star = self.stars[randomIdx]
 
+        x: float = star.x
+        y: float = star.y
+        
+        # Vérifier qu'on est assez loin des bords
+        margin: float = 20  # Marge de sécurité
+        if x < margin or x > self.screenWidth - margin or y < margin or y > self.screenHeight - margin:
+            return  # Ne pas créer de supernova si trop près du bord
+
         star.erase(screen)
         self.stars.pop(randomIdx)
 
-        self.supernovaActiveList.append(Supernova(star.x, star.y))
+        self.supernovaActiveList.append(Supernova(x, y))
 
     def updateAndDrawSupernovas(self, screen: pygame.Surface) -> None:
         for supernova in self.supernovaActiveList[:]:

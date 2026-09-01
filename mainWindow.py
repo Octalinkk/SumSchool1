@@ -8,6 +8,10 @@ from MidiDataExtractor import MidiDataExtractor
 from Grammar import Grammar
 from AudioConverter import audioToMidi
 from StarManager import StarManager
+from typing import List, Dict, Any, Optional
+from StarManager import StarManager
+from asteroid import Asteroid
+import random
 
 
 class Game:
@@ -27,17 +31,48 @@ class Game:
         self.extract = MidiDataExtractor(self.midi_path)
         self.Instr1Notes = self.extract.getNotesForIntru(0)
         self.Instr2Notes = self.extract.getNotesForIntru(1)
-        self.starManager = StarManager(self.screenWidth, self.screenHeight)
+        
+        # Initialize StarManager
+        self.starManager: StarManager = StarManager(self.screenWidth, self.screenHeight)
+        
+        # Asteroids management
+        self.asteroids: List[Dict[str, Any]] = []
 
         pygame.init()
         self.screen = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         pygame.display.set_caption("Animation")
         
 
+    
+
+
+    def generateRandomAsteroid(self) -> None:
+        randomX: float = random.uniform(0, self.screenWidth)
+        randomY: float = random.uniform(0, self.screenHeight)
+        radius: float = random.uniform(10, 30)
+        
+        # Vitesse aléatoire
+        vx: float = random.uniform(-3, 3)
+        vy: float = random.uniform(-3, 3)
+        
+        # Vitesse de rotation
+        rotationSpeed: float = random.uniform(-0.05, 0.05)
+        
+        self.asteroids.append({
+            'asteroid': Asteroid(randomX, randomY, radius),
+            'x': randomX,
+            'y': randomY,
+            'radius': radius,
+            'vx': vx,
+            'vy': vy,
+            'rotation': 0,
+            'rotationSpeed': rotationSpeed
+        })
+
     def onInit(self) -> None:
         self.starManager.spawnStars(self.nStars, self.screen)
         pygame.mixer.music.load(self.defPath)
-
+    
         planet = Planet(Vector2(self.screenWidth / 2, self.screenHeight / 2), 100, self.grammar.seed, 2)
         ring = Ring(planet)
         spaceShip = SpaceShip(Vector2(planet.origin.x + planet.radius * 2, planet.origin.y), planet.origin)
@@ -45,13 +80,16 @@ class Game:
         pltShip = self.grammar.genPalette(5)  # Ship has 5 parts
         pltUpperRing = self.grammar.genPalette(360)
         pltLowerRing = self.grammar.genPalette(360)
-
+    
+        for _ in range(5):
+            self.generateRandomAsteroid()
+    
         pygame.mixer.music.play()
-
-
+    
+    
         nextNoteSeq1Idx = 0
         nextNoteSeq2Idx = 0
-
+        
         while self.running:
             songPos = pygame.mixer.music.get_pos()
             if songPos != -1:
@@ -80,6 +118,27 @@ class Game:
             self.starManager.moveAllStars(self.screen)
             self.starManager.updateAndDrawSupernovas(self.screen)
 
+            # Draw and move asteroids
+            for asteroid_dict in self.asteroids[:]:
+                ast = asteroid_dict['asteroid']
+                            
+                # Effacer l'ancienne position
+                ast.erase(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], asteroid_dict['rotation'])
+                            
+                # Mettre à jour position
+                asteroid_dict['x'] += asteroid_dict['vx']
+                asteroid_dict['y'] += asteroid_dict['vy']
+                asteroid_dict['rotation'] += asteroid_dict['rotationSpeed']
+                            
+                # Gérer wraparound aux bords de l'écran
+                asteroid_dict['x'] = asteroid_dict['x'] % self.screenWidth
+                asteroid_dict['y'] = asteroid_dict['y'] % self.screenHeight
+                            
+                # Dessiner à la nouvelle position
+                ast.draw(self.screen, asteroid_dict['x'], asteroid_dict['y'], asteroid_dict['radius'], (100, 100, 100), asteroid_dict['rotation'])
+
+
+            # Draw spaceship
             spaceShip.eraseDrawing(self.screen)
             ring.drawLowerRing(self.screen, pltLowerRing)
             spaceShip.rotateShip(0.001)
