@@ -1,12 +1,14 @@
 import random
 import math
 import time
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 import pygame
 from pygame import Vector2
 
-from Triangle import Triangle
+from supTriangle import supTriangle
+from supSquare import supSquare
+from supCircle import supCircle
 
 
 class Supernova:
@@ -22,8 +24,8 @@ class Supernova:
         self.y: float = y
         self.startTime: float = time.time()
 
-        self.triangle: List[Triangle] = []
-        self.color: List[Tuple[float, float, float]] = []
+        self.shapes: List[Any] = []
+        self.color: List[Tuple[int, int, int]] = []
         self.spiralX: List[float] = []
         self.spiralY: List[float] = []
 
@@ -66,32 +68,27 @@ class Supernova:
         else:
             self._drawDestruction(screen)
 
-    def _generateTriangles(self) -> None:
-        numTriangles: int = 30
+    def _generateShapes(self) -> None:
+        numShapes: int = int(random.uniform(30, 60))
+        shapeClasses = [supTriangle, supSquare, supCircle]
 
-        for _ in range(numTriangles):
+        for _ in range(numShapes):
             randomR = int(random.uniform(50, 80))
             randomG = int(random.uniform(50, 80))
             randomB = int(random.uniform(150, 255))
 
             angle = random.uniform(0, 6.28)
 
-            # PLACER LES TRIANGLES PLUS LOIN DU CENTRE
+            # PLACER LES FORMES PLUS LOIN DU CENTRE
             radius: float = random.uniform(0, 5)
             offsetX: float = radius * math.cos(angle)
             offsetY: float = radius * math.sin(angle)
 
-            vec1 = Vector2(self.x + offsetX, self.y + offsetY)
-            vec2 = Vector2(
-                self.x + offsetX + random.uniform(5, 10),
-                self.y + offsetY + random.uniform(5, 10),
-            )
-            vec3 = Vector2(self.x + offsetX + random.uniform(10, 20), self.y + offsetY)
+            # Créer une forme aléatoire
+            randomShapeClass = random.choice(shapeClasses)
+            shape = randomShapeClass(self.x + offsetX, self.y + offsetY, (randomR, randomG, randomB))
 
-            tri = Triangle(vec1, vec2, vec3)
-            tri.rotate(Vector2(self.x, self.y), angle)
-
-            self.triangle.append(tri)
+            self.shapes.append(shape)
             self.color.append((randomR, randomG, randomB))
             self.spiralX.append(self.x + offsetX)
             self.spiralY.append(self.y + offsetY)
@@ -99,19 +96,23 @@ class Supernova:
     def _drawExpansion(self, screen: pygame.Surface, elapsedTime: float) -> None:
         progress: float = elapsedTime / self.EXPANSION_DURATION
 
-        if not self.triangle:
-            self._generateTriangles()
+        if not self.shapes:
+            self._generateShapes()
 
-        for i in range(len(self.triangle)):
-            tri = self.triangle[i]
+        for i in range(len(self.shapes)):
+            shape = self.shapes[i]
             col = self.color[i]
 
-            intensifiedColor = (col[0] * progress, col[1] * progress, col[2] * progress)
-            tri.draw(screen, intensifiedColor)
+            intensifiedColor = (
+                int(col[0] * progress),
+                int(col[1] * progress),
+                int(col[2] * progress)
+            )
+            shape.draw(screen, intensifiedColor, 0)
 
     def _drawActive(self, screen: pygame.Surface) -> None:
-        for i in range(len(self.triangle)):
-            self.triangle[i].draw(screen, self.color[i])
+        for i in range(len(self.shapes)):
+            self.shapes[i].draw(screen, self.color[i], 0)
 
     def _drawConvergence(self, screen: pygame.Surface, convergenceElapsed: float) -> None:
         progress: float = convergenceElapsed / self.CONVERGENCE_DURATION
@@ -119,29 +120,29 @@ class Supernova:
         speedFactor: float = 0.01
         adjustedProgress: float = progress * speedFactor
 
-        for i in range(len(self.triangle)):
-            tri = self.triangle[i]
+        for i in range(len(self.shapes)):
+            shape = self.shapes[i]
 
             initialX: float = self.spiralX[i]
             initialY: float = self.spiralY[i]
 
-            tri.draw(screen, (0, 0, 0))
+            shape.erase(screen, 0)
 
             currentX: float = initialX + (self.x - initialX) * adjustedProgress
             currentY: float = initialY + (self.y - initialY) * adjustedProgress
 
             offsetX: float = currentX - initialX
             offsetY: float = currentY - initialY
-            tri.move(Vector2(offsetX, offsetY))
+            shape.move(Vector2(offsetX, offsetY))
 
             originalColor = self.color[i]
             convergenceColor = (
-                originalColor[0] + (255 - originalColor[0]) * progress,
-                originalColor[1] + (255 - originalColor[1]) * progress,
-                originalColor[2] + (255 - originalColor[2]) * progress,
+                int(originalColor[0] + (255 - originalColor[0]) * progress),
+                int(originalColor[1] + (255 - originalColor[1]) * progress),
+                int(originalColor[2] + (255 - originalColor[2]) * progress),
             )
 
-            tri.draw(screen, convergenceColor)
+            shape.draw(screen, convergenceColor, 0)
 
     def _drawFadeToBlack(self, screen: pygame.Surface, fadeElapsed: float) -> None:
         progress: float = fadeElapsed / self.FADE_DURATION
@@ -149,20 +150,20 @@ class Supernova:
         speedFactor: float = 0.5
         adjustedProgress: float = progress * speedFactor
 
-        for i in range(len(self.triangle)):
-            tri = self.triangle[i]
+        for i in range(len(self.shapes)):
+            shape = self.shapes[i]
 
             initialX: float = self.spiralX[i]
             initialY: float = self.spiralY[i]
 
-            tri.draw(screen, (0, 0, 0))
+            shape.erase(screen, 0)
 
             currentX: float = initialX + (self.x - initialX) * (1.0 + adjustedProgress)
             currentY: float = initialY + (self.y - initialY) * (1.0 + adjustedProgress)
 
             offsetX: float = currentX - initialX
             offsetY: float = currentY - initialY
-            tri.move(Vector2(offsetX, offsetY))
+            shape.move(Vector2(offsetX, offsetY))
 
             fadeColor = (
                 int(255 * (1 - progress)),
@@ -170,15 +171,14 @@ class Supernova:
                 int(255 * (1 - progress)),
             )
 
-            tri.draw(screen, fadeColor)
+            shape.draw(screen, fadeColor, 0)
 
     def _drawDestruction(self, screen: pygame.Surface) -> None:
-        for tri in self.triangle:
-            tri.draw(screen, (0, 0, 0))
+        for shape in self.shapes:
+            shape.erase(screen, 0)
 
     def cleanup(self) -> None:
-        
-        self.triangle.clear()
+        self.shapes.clear()
         self.spiralX.clear()
         self.spiralY.clear()
         self.color.clear()
